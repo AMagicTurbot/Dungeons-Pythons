@@ -1,0 +1,26 @@
+# Screen and Grid Size
+ROWS = 8
+COLS = 8
+SQSIZE = 100
+WIDTH = COLS*SQSIZE
+HEIGHT = ROWS*SQSIZE
+
+# Gamelog parameters
+LOGWIDTH = 3*SQSIZE
+LOGBKGNDCOLOR = (242, 242, 160)
+LOGHEADCOLOR = (242, 210, 160)
+LOGFONT = 'bookmania'
+
+
+#Background and Themes
+BACKGROUND = None
+
+
+#Gamesets
+UNITLENGHT = 5 #distances in feets
+LENGHTNAME = 'feet'
+
+PlayersCOLOR = (150, 200, 150)
+EnemiesCOLOR = (200, 150, 150)
+
+

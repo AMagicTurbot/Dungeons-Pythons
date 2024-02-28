@@ -1,0 +1,11 @@
+
+
+Update UI to show active token
+
+create an "Actions" class (connected with the Buttons one). Each action will have a corresponding cost and Button
+create an attribute in Creature class containing actions and another one 
+
+Update UI to show token movement, if it has action and bonus action
+Update UI to show buttons when clicking action or BA
+
+create a game blit to show health bars
