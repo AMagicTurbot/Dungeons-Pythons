@@ -15,15 +15,14 @@ class Gamelog:
         self.y = 0.45*HEIGHT
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
         self.rectcolor = (210, 210, 210)
-        self.linedim = (0.9*self.width, self.height/self.max_lenght)
-        self.linepos = [(1.005*self.x, (self.y+self.height-(l+1)*self.height/self.max_lenght)) for l in range(self.max_lenght)]
-
+        
         #Text Parameters
         self.fontsize = int(0.4*self.height/self.max_lenght)
         self.font = pygame.font.SysFont(LOGFONT, self.fontsize)
         self.textcolor = (0, 0, 0)
-        self.maxchar = int(self.width/self.fontsize*1.7)
-        
+        self.maxchar = int(self.width/self.fontsize*2.3)
+        self.linedim = (0.9*self.width, self.height/self.max_lenght)  #Required to divide text over two lines
+        self.linepos = [(1.005*self.x, (1.01*self.y+l*self.height/self.max_lenght)) for l in range(self.max_lenght)]
         
     
     def new_line(self, line):

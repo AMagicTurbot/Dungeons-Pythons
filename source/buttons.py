@@ -6,7 +6,8 @@ from gamelog import Gamelog
 class Buttons:
     def __init__(self):
         self.list = [
-            Reset(position=(WIDTH+LOGWIDTH-100, HEIGHT-30))
+            Reset(position=(WIDTH+LOGWIDTH-100, HEIGHT-30)),
+            Diagnostic(position=(WIDTH+0.1*LOGWIDTH, HEIGHT-30))
         ]
 
         self.active = []
@@ -19,13 +20,11 @@ class Button:
 
     def blit_button(self, surface):
         pygame.draw.rect(surface, self.rectcolor, self.rect)
-        surface.blit(self.text, (self.x+self.width*0.2/0.9, self.y))
+        surface.blit(self.text, (self.x+(self.width-self.text.get_width())/2, self.y))
 
     def clicked(self, event):
         return self.rect.collidepoint(event.pos)
     
-    def on_click(self):
-        self._on_click()
 
 class Reset(Button):
     def __init__(self, position):
@@ -42,8 +41,25 @@ class Reset(Button):
         self.text = self.font.render(self.content, True, self.textcolor)
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
 
-    def _on_click(self):
-        pass
+    def on_click(self, game):
+        print('Resetting game...')
     
+class Diagnostic(Button):
+    def __init__(self, position):
+        super().__init__('DiagnosticButton')
+        self.fontsize = 20
+        self.font = pygame.font.SysFont(LOGFONT, self.fontsize)
+        self.content = 'Diagnostic'
+        self.width = 0.65*self.fontsize*len(self.content)
+        self.height = self.fontsize*1.3
+        self.x = position[0]
+        self.y = position[1]
+        self.textcolor = (0, 0, 0)
+        self.rectcolor = (160, 110, 110)
+        self.text = self.font.render(self.content, True, self.textcolor)
+        self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
+
+    def on_click(self, game):
+        pass
 
         

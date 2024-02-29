@@ -5,6 +5,7 @@ from config import *
 from game import Game
 from square import Square
 from move import Move
+from buttons import Buttons
 
 class Main:
 
@@ -15,16 +16,24 @@ class Main:
         pygame.display.set_caption('Dungeons&Pythons')
         self.game = Game()
 
+    def show_all(self, screen, game, buttons):
+        game.show_all(screen)
+        for button in buttons.list:
+            button.blit_button(screen)
+
     def mainloop(self):
         screen = self.screen
         game = self.game
         field = self.game.field
         dragger = self.game.dragger
-        buttons = self.game.buttons
+        buttons = Buttons()
         gamelog = self.game.gamelog
 
+        game.roll_initiative()
+        gamelog.new_line(game.print_initiative())
+
         while True:
-            game.show_all(screen)
+            self.show_all(screen, game, buttons)
             if dragger.dragging:
                 dragger.update_blit(screen)
                 
@@ -46,12 +55,12 @@ class Main:
                                 dragger.save_initial(event.pos)
                                 dragger.drag_token(token)
                                 field.get_moves(token, clicked_row, clicked_col)
-                                game.show_all(screen)
+                                self.show_all(screen, game, buttons)
                     
                     #Click on a button
                     for button in buttons.list:
                         if button.clicked(event):
-                            button.on_click()
+                            button.on_click(game)
 
 
                             #Special: Reset button
@@ -59,8 +68,10 @@ class Main:
                                 game = Game()
                                 field = game.field
                                 dragger = game.dragger
-                                buttons = game.buttons
+                                buttons = Buttons()
                                 gamelog = game.gamelog
+                                game.roll_initiative()
+                                gamelog.new_line(game.print_initiative())
                     
 
                 #Drag a token
@@ -81,7 +92,7 @@ class Main:
                             #Move token
                             movedistance = field.move(dragger.token, move)
                             gamelog.new_line(str(dragger.token.name) + ' moved by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
-                            game.show_all(screen)
+                            self.show_all(screen, game, buttons)
                     dragger.release_token()
 
                 #Quit event

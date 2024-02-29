@@ -1,8 +1,14 @@
 
 import pygame
 
-# pygame.init()
-# print(pygame.font.get_fonts())
+PC1 = 'A'
+PC2 = 'B'
+PC3 = 'C'
 
-print(1//2)
-print(1%2)
+lista = []
+
+lista.append(PC1)
+print(lista)
+lista.insert(0, PC2)
+print(lista)
+

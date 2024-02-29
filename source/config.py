@@ -1,6 +1,6 @@
 # Screen and Grid Size
 ROWS = 8
-COLS = 8
+COLS = 10
 SQSIZE = 100
 WIDTH = COLS*SQSIZE
 HEIGHT = ROWS*SQSIZE
@@ -20,7 +20,7 @@ BACKGROUND = None
 UNITLENGHT = 5 #distances in feets
 LENGHTNAME = 'feet'
 
-PlayersCOLOR = (150, 200, 150)
+PlayersCOLOR = (100, 150, 100)
 EnemiesCOLOR = (200, 150, 150)
 
 

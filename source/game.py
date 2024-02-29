@@ -4,16 +4,19 @@ from config import *
 from init import Init
 from field import Field
 from dragger import Dragger
-from buttons import Buttons
 from gamelog import Gamelog
+from dice import Dice
 
 class Game:
 
     def __init__(self):
+        self.dice = Dice()
         self.field = Field()
         self.dragger = Dragger()
-        self.buttons = Buttons()
         self.gamelog = Gamelog()
+
+        self.initiative_order = []
+        self.active_player = self.field.playable_tokens[0]
 
     def show_all(self, surface):
         self.show_field(surface)
@@ -59,10 +62,13 @@ class Game:
 
     def show_interface(self, surface):
         #Active player
+        ActivePlayerColor = PlayersCOLOR if self.active_player.team == 'players' else EnemiesCOLOR
+        ActivePlayerText = self.gamelog.font.render('Current player: ' + str(self.active_player), True, ActivePlayerColor)
+        surface.blit(ActivePlayerText, (self.gamelog.x, 10))
+        #Movement
+        MovementText = self.gamelog.font.render('Movement: ' + str(self.active_player.current_movement*UNITLENGHT) + ' ' + LENGHTNAME, True, self.gamelog.textcolor)
+        surface.blit(MovementText, (self.gamelog.x, 30))
         #Actions
-        #Buttons
-        for button in self.buttons.list:
-            button.blit_button(surface)
 
     def show_gamelog(self, surface):
         #Log box
@@ -81,8 +87,36 @@ class Game:
 
     #Turn methods
     def roll_initiative(self):
+        self.initiative_order = []
         for token in self.field.playable_tokens:
-            pass
+                token.initiative = self.dice.rolld20() + token.dex_bonus
+                for i, other in enumerate(self.initiative_order):
+                    if other.initiative == token.initiative:
+                        if token.dex_bonus >= other.dex_bonus:
+                            self.initiative_order.insert(i, token)
+                            break
+                        else:
+                            if i == len(self.initiative_order)-1:
+                                self.initiative_order.append(token) 
+                                break
+                            else:
+                                self.initiative_order.insert(i+1, token)
+                                break
+                    elif other.initiative < token.initiative:
+                        self.initiative_order.insert(i, token)
+                        break
+                if token not in self.initiative_order: self.initiative_order.append(token)    
 
-    
+    def print_initiative(self):
+        initiative = 'Initiative: '
+        for token in self.initiative_order:
+            initiative += str(token) + '(' + str(token.initiative) + '), '
+        return initiative
+        
+    def next_turn(self):
+        index = self.initiative_order.index(self.active_player)
+        if index < len(self.initiative_order):
+            self.active_player = self.initiative_order[index+1]
+        else:
+            self.active_player = self.initiative_order[0]
     

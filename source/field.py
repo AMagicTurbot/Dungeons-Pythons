@@ -56,6 +56,7 @@ class Field:
     def get_moves(self, token, row, col):
         #Check if the token can move
         if token.can_move and token.current_movement != 0:
+            token.clear_moves()
             initial_square = Square(row, col) 
             #Calculate all possible moves for that token
             possible_moves = []
@@ -71,7 +72,7 @@ class Field:
                 #Check if the evaluated move is valid (out of range, occupied square)
                 if Square.on_field(possible_move_row, possible_move_col):
                     if not self.squares[possible_move_row][possible_move_col].is_occupied():
-                        #create a new move
+                        #create a new available move for the token
                         final = Square(possible_move_row, possible_move_col)
                         move = Move(initial_square, final)
                         token.add_move(move)
@@ -93,6 +94,8 @@ class Field:
             self.squares[token[1]][token[2]] = Square(token[1],token[2], token[0])
         for token in init.objects:
             self.squares[token[1]][token[2]] = Square(token[1],token[2], token[0])
+        for token in self.playable_tokens:
+            token.current_movement = token.speed
 
     def add_token(self, token, row, col):
         self.squares[row][col] = Square(row, col, token)
