@@ -14,6 +14,8 @@ LOGFONT = 'bookmania'
 
 #Background and Themes
 BACKGROUND = None
+ONColor = (150, 250, 150)
+OFFColor = (150, 150, 150)
 
 
 #Gamesets

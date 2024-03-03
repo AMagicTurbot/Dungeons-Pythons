@@ -45,12 +45,39 @@ class Creature(Token):
 
         #Game variables
         self.initiative = 0
+        self.action = 1
+        self.bonus_action = 1
+        self.reaction = 1
 
     def add_move(self, move):
         self.moves.append(move)
     
     def clear_moves(self):
         self.moves = []
+    
+    def recover_action(self):
+        self.action = 1
+
+    def recover_bonus_action(self):
+        self.bonus_action=1
+
+    def recover_reaction(self):
+        self.reaction = 1
+    
+    def recover_all(self):
+        self.recover_action()
+        self.recover_bonus_action()
+        self.recover_reaction()
+        self.current_movement=self.speed
+
+    def has_action(self):
+        return self.action>0
+
+    def has_bonus_action(self):
+        return self.bonus_action>0
+
+    def has_reaction(self):
+        return self.reaction>0
 
     def _bonus(characteristic):
         return (characteristic-10)//2

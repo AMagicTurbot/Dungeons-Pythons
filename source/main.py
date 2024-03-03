@@ -50,7 +50,7 @@ class Main:
                         #Click on a token
                         if field.squares[clicked_row][clicked_col].is_occupied():
                             token = field.squares[clicked_row][clicked_col].token
-                            if token.can_move:
+                            if token.can_move and token == game.active_player:
                                 #Start dragging the token
                                 dragger.save_initial(event.pos)
                                 dragger.drag_token(token)

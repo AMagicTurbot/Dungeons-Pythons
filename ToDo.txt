@@ -1,14 +1,17 @@
 
-solved movement bug
-implemented initiative
-implemented token equality 
 
-Set Active player from initiative count and advance it with a "next turn" button()
+DONE: Set Active player from initiative count and advance it with a "next turn" button()
+DONE: Next turn button recovers movement and actions
+DONE: Update UI to show token movement, if it has action and bonus action
 
-Update UI to show token movement, if it has action and bonus action
-Update UI to show buttons when clicking action or BA
 
 create an "Actions" class (connected with the Buttons one). Each action will have a corresponding cost and Button
+Create a "Weapon" class
+Create standard Creature Actions: Melee Weapon attack, Dodge, Dash
 create an attribute in Creature class containing actions and another one with available actions
+Update UI to show buttons when clicking action or BA
+
+
+
 
 create a game blit to show health bars

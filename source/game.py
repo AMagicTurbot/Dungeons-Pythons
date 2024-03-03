@@ -68,7 +68,18 @@ class Game:
         #Movement
         MovementText = self.gamelog.font.render('Movement: ' + str(self.active_player.current_movement*UNITLENGHT) + ' ' + LENGHTNAME, True, self.gamelog.textcolor)
         surface.blit(MovementText, (self.gamelog.x, 30))
-        #Actions
+        #Action
+        ARect = pygame.Rect((WIDTH + LOGWIDTH//8, 50), (LOGWIDTH//3, 30))
+        AColor = ONColor if self.active_player.has_action() else OFFColor
+        AText = self.gamelog.font.render('Action', True, (50, 50, 50))
+        pygame.draw.rect(surface, ONColor, ARect)
+        surface.blit(AText, (WIDTH+LOGWIDTH//8+(LOGWIDTH//3-AText.get_width())/2, 60))
+        #Bonus Actions
+        ARect = pygame.Rect((WIDTH + LOGWIDTH*7//12, 50), (LOGWIDTH//3, 30))
+        AColor = ONColor if self.active_player.has_bonus_action() else OFFColor
+        AText = self.gamelog.font.render('Bonus Action', True, (50, 50, 50))
+        pygame.draw.rect(surface, ONColor, ARect)
+        surface.blit(AText, (WIDTH+LOGWIDTH*7//12+(LOGWIDTH//3-AText.get_width())/2, 60))
 
     def show_gamelog(self, surface):
         #Log box
@@ -106,6 +117,7 @@ class Game:
                         self.initiative_order.insert(i, token)
                         break
                 if token not in self.initiative_order: self.initiative_order.append(token)    
+        self.active_player=self.initiative_order[0]
 
     def print_initiative(self):
         initiative = 'Initiative: '
@@ -115,8 +127,10 @@ class Game:
         
     def next_turn(self):
         index = self.initiative_order.index(self.active_player)
-        if index < len(self.initiative_order):
+        if index < len(self.initiative_order)-1:
             self.active_player = self.initiative_order[index+1]
         else:
             self.active_player = self.initiative_order[0]
+        self.active_player.recover_all()
+    
     
