@@ -1,6 +1,9 @@
 import os
 import random
 from config import *
+from actions import *
+from weapons import * 
+from buttons import *
 
 class Token:
     def __init__(self, name, texture=None, texture_rect=None):
@@ -35,7 +38,6 @@ class Creature(Token):
     def __init__(self, name, team, speed=0):
         super().__init__(name)
         self.team = team
-        
         #Movement
         self.can_move = True
         self.speed = speed // UNITLENGHT
@@ -43,18 +45,27 @@ class Creature(Token):
         self.moves = []
         self.has_moved_diagonally_once = False
 
-        #Game variables
+        #Turn variables
         self.initiative = 0
         self.action = 1
         self.bonus_action = 1
         self.reaction = 1
+
+        #Game actions
+        self.action_list = []
+        self.available_actions = self.action_list
+
 
     def add_move(self, move):
         self.moves.append(move)
     
     def clear_moves(self):
         self.moves = []
-    
+
+    def _bonus(characteristic):
+        return (characteristic-10)//2
+
+    #Turn methods
     def recover_action(self):
         self.action = 1
 
@@ -79,8 +90,7 @@ class Creature(Token):
     def has_reaction(self):
         return self.reaction>0
 
-    def _bonus(characteristic):
-        return (characteristic-10)//2
+
 
     
 
@@ -89,20 +99,42 @@ class Antonio(Creature):
     def __init__(self):
         super().__init__('Antonio', team='players')
         self.speed = 20 // UNITLENGHT
+        self.proficiency = 2
+        #Characteristics
+        self.str = 12
+        self.str_bonus = Creature._bonus(self.str)
         self.dex = 16
         self.dex_bonus = Creature._bonus(self.dex)
+
+        #Equipment
+        self.weapon = Shortsword
+        self.ArmorClass = 15
+
+        #Actions
+
+
+
+
 
 class Kenku(Creature):
     def __init__(self):
         super().__init__('Kenku', team='enemies')
         self.speed = 10 // UNITLENGHT
+
+        #Characteristics
+        self.str = 8
+        self.str_bonus = Creature._bonus(self.str)
         self.dex = 14
         self.dex_bonus = Creature._bonus(self.dex)
 
+        #Equipment
+        self.weapon = None
+        self.ArmorClass = 12
 
 
 
-#Inanimate game objects
+
+#Inanimate tokens
 class Object(Token):
     def __init__(self, name):
         super().__init__(name)

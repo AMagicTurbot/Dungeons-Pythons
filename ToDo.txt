@@ -5,9 +5,13 @@ DONE: Next turn button recovers movement and actions
 DONE: Update UI to show token movement, if it has action and bonus action
 
 
-create an "Actions" class (connected with the Buttons one). Each action will have a corresponding cost and Button
+create "Actions" class. Each action will have a corresponding "cost" and a Button. 
+    Needs self (weapon, bonuses), target (token), game (general effects, gamelog)
+    game: at new turn check for available actions -> .append corresponding Button in Buttons
+    main: click on button -> game: execture on_click action ->
 Create a "Weapon" class
-Create standard Creature Actions: Melee Weapon attack, Dodge, Dash
+Create standard Creature Actions: Melee Weapon attack. 
+Create standard Creature Actions: Dodge, Dash
 create an attribute in Creature class containing actions and another one with available actions
 Update UI to show buttons when clicking action or BA
 
