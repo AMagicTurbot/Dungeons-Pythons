@@ -1,5 +1,6 @@
 from config import *
 import math
+from tokens import *
 
 class Square:
 
@@ -15,7 +16,10 @@ class Square:
         return self.token != None
     
     def has_enemy(self, team):
-        return self.is_occupied() and self.token.team != team
+        if isinstance(self.token, Creature):
+            return self.is_occupied() and self.token.team != team
+        else:
+            return False
 
     def has_ally(self, team):
         return self.is_occupied() and self.token.team == team

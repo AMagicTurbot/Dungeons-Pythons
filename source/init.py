@@ -6,8 +6,8 @@ class Init:
             [Antonio(), 6, 5]       #Token and starting position in row, col
             ] 
         self.enemies = [
-            [Kenku(), 4, 3], 
-            [Kenku(), 4, 4] 
+            [Kenku(name='Kenku 1'), 4, 3], 
+            [Kenku(name='Kenku 2'), 4, 4] 
         ]
         self.objects = [
             [stones(), 2, 2] 

@@ -22,9 +22,9 @@ class Main:
             button.blit_button(screen)
         i = 0
         if game.show_actions == 'Actions':
-            game.get_available_actions()
+            buttons.ActivePlayerActions = []
             for action in game.active_player.available_actions:
-                action.button = Actionbutton((10 + WIDTH + LOGWIDTH//12, 90 + i*20), action)
+                action.button = Actionbutton((10 + WIDTH + LOGWIDTH//12, 90 + i*25), action)
                 buttons.ActivePlayerActions.append(action.button)
                 action.button.blit_button(screen)
                 i += 1
@@ -65,24 +65,29 @@ class Main:
                                 field.get_moves(token, clicked_row, clicked_col)
                                 self.show_all(screen, game, buttons)
                     
-                    #Click on a button
-                    for button in buttons.Gamestate0:
-                        if button.clicked(event):
-                            #Special: Reset button
-                            if button.name == 'ResetButton':
-                                game = Game()
-                                field = game.field
-                                dragger = game.dragger
-                                buttons = Buttons()
-                                gamelog = game.gamelog
-                                game.roll_initiative()
-                                gamelog.new_line(game.print_initiative())
-                            button.on_click(game)
-                            break
-                    for button in buttons.ActivePlayerActions:
-                        if button.clicked(event):
-                            button.on_click(game)
-                            break
+                    else:
+                        #Click on a button
+                        for button in buttons.Gamestate0:
+                            if button.clicked(event):
+                                #Special: Reset button
+                                if button.name == 'ResetButton':
+                                    game = Game()
+                                    field = game.field
+                                    dragger = game.dragger
+                                    buttons = Buttons()
+                                    gamelog = game.gamelog
+                                    game.roll_initiative()
+                                    gamelog.new_line(game.print_initiative())
+                                button.on_click(game)
+                                break
+
+                        for button in buttons.ActivePlayerActions:
+                            if button.clicked(event):
+                                button.on_click(game)
+                                break
+                        game.get_available_actions()
+                    
+                    
 
                 #Drag a token
                 elif event.type == pygame.MOUSEMOTION:
@@ -101,22 +106,27 @@ class Main:
                         if field.valid_move(dragger.token, move):
                             #Move token
                             movedistance = field.move(dragger.token, move)
-                            gamelog.new_line(str(dragger.token.name) + ' moved by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
+                            gamelog.new_line(str(dragger.token.name) + ' moves by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
                             self.show_all(screen, game, buttons)
-                    dragger.release_token()
+                        dragger.release_token()
+                        game.get_available_actions()
 
                 #Quit event
                 elif event.type == pygame.QUIT:
                     pygame.quit()
                     sys.exit()
-        
+
                 #Game events
-                if game.active_player.has_action: buttons.Gamestate0[2].switch_on()
+                if game.active_player.has_action(): buttons.Gamestate0[2].switch_on()
                 else: buttons.Gamestate0[2].switch_off()
-                if game.active_player.has_bonus_action: buttons.Gamestate0[3].switch_on() 
+                if game.active_player.has_bonus_action(): buttons.Gamestate0[3].switch_on() 
                 else: buttons.Gamestate0[3].switch_off()
-                
+
             pygame.display.update()
+
+            
+
+            
 
 
 

@@ -1,10 +1,8 @@
 
+DONE: Implemented dice advantage/disadvantage roll
+DONE: Fixed main loop to correctly change buttons color when action is unavailable
+DONE: "Dash" Action 
+DONE: "Attack" Action(s)
 
-DONE: Created a game methond get_available_actions for the active player
-DONE: Update UI to blit active player available actions
-DONE: Solve actionbutton bug that stalls the loop
-
-Create standard Creature Actions: Melee Weapon attack. 
-Create standard Creature Actions: Dodge, Dash
-
+Create standard Creature Actions: Dodge
 create a game blit to show health bars

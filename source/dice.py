@@ -15,8 +15,19 @@ class Dice:
                 rolls.append(np.random.randint(self.faces)+1)
             return rolls
 
-    def roll(self, num=1):
-        return self.roll_dice(num)
+    def roll(self, num=1, advantage=False, disadvantage=False):
+        if advantage and disadvantage or not advantage and not disadvantage:
+            return self.roll_dice(num)
+        elif advantage:
+            rolls = [self.roll_dice(num), self.roll_dice(num)]
+            print(rolls)
+            return max(rolls)
+        elif disadvantage:
+            rolls = [self.roll_dice(num), self.roll_dice(num)]
+            print(rolls)
+            return min(rolls)
+        
+        
 
 D20 = Dice(20)
 D12 = Dice(12)

@@ -131,11 +131,19 @@ class Game:
         
     def get_available_actions(self):
         self.active_player.available_actions = []
-        for action_name in self.active_player.action_list:
-            possible_action = ActionDatabase[action_name]
-            if possible_action.is_available(self.active_player, 'action'):
-                action = possible_action.create(self.active_player, 'action')
-                self.active_player.available_actions.append(action)
+        for action_name in self.active_player.action_list:                      #Consider token Actions list
+            possible_action = ActionDatabase[action_name]                       
+            if possible_action.is_available(self.active_player, 'action'):      #Check if action is available 
+                if possible_action.requires_target():                           #Check if action requires a target 
+                    #scan for available targets
+                    available_targets = possible_action.get_available_targets(self.active_player, self.field) 
+                    for target in available_targets:
+                        #Create action by binding token and cost    
+                        action = possible_action.create(self.active_player, 'action', target)
+                        self.active_player.available_actions.append(action) 
+                else:
+                    action=possible_action.create(self.active_player,'action')  #Create action by binding token and cost                                   
+                    self.active_player.available_actions.append(action)   
         return self.active_player.available_actions  #For AI player
 
     def next_turn(self):
@@ -145,3 +153,4 @@ class Game:
         else:
             self.active_player = self.initiative_order[0]
         self.active_player.turn_start()
+        

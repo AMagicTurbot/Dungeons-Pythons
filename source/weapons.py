@@ -4,10 +4,10 @@ from config import *
 class Weapon:
     def __init__(self, name, WeaponType, Range, DamageDice, DamageType, attributes):
         self.name = name
-        self.type = WeaponType
+        self.WeaponType = WeaponType
         self.range = Range
-        self.dmg = DamageDice
-        self.dmgtype = DamageType
+        self.DamageDice = DamageDice
+        self.DamageType = DamageType
         self.attributes = attributes
         
 

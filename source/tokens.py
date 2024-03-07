@@ -44,24 +44,19 @@ class Creature(Token):
         self.current_movement = self.speed 
         self.moves = []
         self.has_moved_diagonally_once = False
-
         #Turn variables
         self.initiative = 0
         self.action = 1
         self.bonus_action = 1
         self.reaction = 1
-
         #Game actions
         self.action_list = []
         self.available_actions = []
 
-
     def add_move(self, move):
         self.moves.append(move)
-    
     def clear_moves(self):
         self.moves = []
-
     def _bonus(characteristic):
         return (characteristic-10)//2
 
@@ -86,13 +81,11 @@ class Creature(Token):
         self.current_movement=self.speed
 
     def has_action(self):
-        return self.action>0
-
+        return self.action==1
     def has_bonus_action(self):
-        return self.bonus_action>0
-
+        return self.bonus_action==1
     def has_reaction(self):
-        return self.reaction>0
+        return self.reaction==1
 
 
 
@@ -100,31 +93,44 @@ class Creature(Token):
 
 #Preset characters
 class Antonio(Creature): 
-    def __init__(self):
-        super().__init__('Antonio', team='players')
+    def __init__(self, name='Antonio', team='players'):
+        spritename='Antonio'
+        super().__init__(spritename, team)
+        self.name=name
         self.speed = 20 // UNITLENGHT
         self.proficiency = 2
+
         #Characteristics
         self.str = 12
         self.str_bonus = Creature._bonus(self.str)
         self.dex = 16
         self.dex_bonus = Creature._bonus(self.dex)
 
+        #Status
+        self.MaxHp = 12
+        self.Hp = self.MaxHp
+
         #Equipment
+        self.proficiencies = ['Shortsword']
         self.weapon = Shortsword
         self.ArmorClass = 15
 
         #Actions
-        self.action_list = ['Wait']
+        self.action_list = ['Wait',
+                            'Dash',
+                            'Weapon Attack']
 
 
 
 
 
 class Kenku(Creature):
-    def __init__(self):
-        super().__init__('Kenku', team='enemies')
+    def __init__(self, name='Kenku', team='enemies'):
+        spritename='Kenku'
+        super().__init__(spritename, team)
+        self.name=name
         self.speed = 10 // UNITLENGHT
+        self.proficiency = 2
 
         #Characteristics
         self.str = 8
@@ -132,10 +138,19 @@ class Kenku(Creature):
         self.dex = 14
         self.dex_bonus = Creature._bonus(self.dex)
 
+        #Status
+        self.MaxHp = 5
+        self.Hp = self.MaxHp
+
         #Equipment
+        self.proficiencies = []
         self.weapon = Shortbow
         self.ArmorClass = 12
 
+        #Actions
+        self.action_list = ['Wait',
+                            'Dash',
+                            'Weapon Attack']
 
 
 

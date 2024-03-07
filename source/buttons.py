@@ -41,14 +41,18 @@ class Actionbutton(Button):
         self.fontsize = 15
         self.font = pygame.font.SysFont(LOGFONT, self.fontsize)
         self.content = self.name
-        self.width = LOGWIDTH*5//12
-        self.height = 20
+        self.textcolor = (0, 0, 0)
+        self.text = self.font.render(self.content, True, self.textcolor)
         self.x = position[0]
         self.y = position[1]
-        self.textcolor = (0, 0, 0)
         self.rectcolor = (210, 210, 210)
-        self.text = self.font.render(self.content, True, self.textcolor)
+        self.width = self.text.get_width()+10
+        self.height = 20
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
+
+    def blit_button(self, surface):
+        pygame.draw.rect(surface, self.rectcolor, self.rect)
+        surface.blit(self.text, (self.x+5, self.y))
     
     def on_click(self, game):
         self.action.do(game)
@@ -61,7 +65,7 @@ class ActionsButtons(Button):
         super().__init__('ActionsButtons')
         self.fontsize = 20
         self.font = pygame.font.SysFont(LOGFONT, self.fontsize)
-        self.content = 'Actions'
+        self.content = 'Action'
         self.width = LOGWIDTH*4.5//12
         self.height = 30
         self.x = WIDTH + LOGWIDTH//12
@@ -79,14 +83,17 @@ class ActionsButtons(Button):
         surface.blit(self.text, (self.x+(self.width-self.text.get_width())/2, 57))
 
     def on_click(self, game):
-        if game.show_actions == None: game.show_actions = 'Actions'
-        elif game.show_actions == 'Actions': game.show_actions = None
+        if game.active_player.has_action():
+            if game.show_actions != 'Actions': game.show_actions = 'Actions'
+            else: game.show_actions = None
+        else:
+            pass
     
     def switch_on(self):
-        self.color = ONColor
+        self.bkgnd_color = ONColor
     
     def switch_off(self):
-        self.color = OFFColor
+        self.bkgnd_color = OFFColor
 
 
 class BonusactionsButtons(Button):
@@ -94,7 +101,7 @@ class BonusactionsButtons(Button):
         super().__init__('BonusActionsButtons')
         self.fontsize = 15
         self.font = pygame.font.SysFont(LOGFONT, self.fontsize)
-        self.content = 'Bonus Actions'
+        self.content = 'Bonus Action'
         self.width = LOGWIDTH*4.5//12
         self.height = 30
         self.x = WIDTH + LOGWIDTH*6.5//12
@@ -113,14 +120,17 @@ class BonusactionsButtons(Button):
         surface.blit(self.text, (self.x+(self.width-self.text.get_width())/2, 57))
 
     def on_click(self, game):
-        if game.show_actions == None: game.show_actions = 'Bonus Actions'
-        elif game.show_actions == 'Bonus Actions': game.show_actions = None
+        if game.active_player.has_bonus_action():
+            if game.show_actions != 'Bonus Actions': game.show_actions = 'Bonus Actions'
+            else: game.show_actions = None
+        else:
+            pass
 
     def switch_on(self):
-        self.color = ONColor
+        self.bkgnd_color = ONColor
     
     def switch_off(self):
-        self.color = OFFColor
+        self.bkgnd_color = OFFColor
 
 
 class Reset(Button):
@@ -157,7 +167,6 @@ class Diagnostic(Button):
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
 
     def on_click(self, game):
-        # print(game.active_player.action)
         game.next_turn()
         pass
 
