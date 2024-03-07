@@ -53,7 +53,7 @@ class Creature(Token):
 
         #Game actions
         self.action_list = []
-        self.available_actions = self.action_list
+        self.available_actions = []
 
 
     def add_move(self, move):
@@ -66,16 +66,20 @@ class Creature(Token):
         return (characteristic-10)//2
 
     #Turn methods
+    def use_action(self):
+        self.action = 0
     def recover_action(self):
         self.action = 1
-
+    def use_bonus_action(self):
+        self.bonus_action = 0
     def recover_bonus_action(self):
         self.bonus_action=1
-
+    def use_reaction(self):
+        self.reaction = 0
     def recover_reaction(self):
         self.reaction = 1
     
-    def recover_all(self):
+    def turn_start(self):
         self.recover_action()
         self.recover_bonus_action()
         self.recover_reaction()
@@ -111,6 +115,7 @@ class Antonio(Creature):
         self.ArmorClass = 15
 
         #Actions
+        self.action_list = ['Wait']
 
 
 
@@ -128,7 +133,7 @@ class Kenku(Creature):
         self.dex_bonus = Creature._bonus(self.dex)
 
         #Equipment
-        self.weapon = None
+        self.weapon = Shortbow
         self.ArmorClass = 12
 
 

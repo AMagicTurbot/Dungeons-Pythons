@@ -1,22 +1,25 @@
 import pygame
 
 from config import *
+from dice import *
 from init import Init
 from field import Field
 from dragger import Dragger
 from gamelog import Gamelog
-from dice import Dice
+from actions import ActionDatabase
+from buttons import Actionbutton
+
 
 class Game:
 
     def __init__(self):
-        self.dice = Dice()
         self.field = Field()
         self.dragger = Dragger()
         self.gamelog = Gamelog()
 
         self.initiative_order = []
         self.active_player = self.field.playable_tokens[0]
+        self.show_actions = None
 
     def show_all(self, surface):
         self.show_field(surface)
@@ -69,10 +72,10 @@ class Game:
         MovementText = self.gamelog.font.render('Movement: ' + str(self.active_player.current_movement*UNITLENGHT) + ' ' + LENGHTNAME, True, self.gamelog.textcolor)
         surface.blit(MovementText, (self.gamelog.x, 30))
         #Action
-        ARect = pygame.Rect((WIDTH + LOGWIDTH//8, 50), (LOGWIDTH//3, 30))
+        
         AColor = ONColor if self.active_player.has_action() else OFFColor
         AText = self.gamelog.font.render('Action', True, (50, 50, 50))
-        pygame.draw.rect(surface, ONColor, ARect)
+        
         surface.blit(AText, (WIDTH+LOGWIDTH//8+(LOGWIDTH//3-AText.get_width())/2, 60))
         #Bonus Actions
         ARect = pygame.Rect((WIDTH + LOGWIDTH*7//12, 50), (LOGWIDTH//3, 30))
@@ -100,7 +103,7 @@ class Game:
     def roll_initiative(self):
         self.initiative_order = []
         for token in self.field.playable_tokens:
-                token.initiative = self.dice.rolld20() + token.dex_bonus
+                token.initiative = D20.roll() + token.dex_bonus
                 for i, other in enumerate(self.initiative_order):
                     if other.initiative == token.initiative:
                         if token.dex_bonus >= other.dex_bonus:
@@ -118,6 +121,7 @@ class Game:
                         break
                 if token not in self.initiative_order: self.initiative_order.append(token)    
         self.active_player=self.initiative_order[0]
+        self.get_available_actions()
 
     def print_initiative(self):
         initiative = 'Initiative: '
@@ -125,12 +129,19 @@ class Game:
             initiative += str(token) + '(' + str(token.initiative) + '), '
         return initiative
         
+    def get_available_actions(self):
+        self.active_player.available_actions = []
+        for action_name in self.active_player.action_list:
+            possible_action = ActionDatabase[action_name]
+            if possible_action.is_available(self.active_player, 'action'):
+                action = possible_action.create(self.active_player, 'action')
+                self.active_player.available_actions.append(action)
+        return self.active_player.available_actions  #For AI player
+
     def next_turn(self):
         index = self.initiative_order.index(self.active_player)
         if index < len(self.initiative_order)-1:
             self.active_player = self.initiative_order[index+1]
         else:
             self.active_player = self.initiative_order[0]
-        self.active_player.recover_all()
-    
-    
+        self.active_player.turn_start()

@@ -5,14 +5,14 @@ from gamelog import Gamelog
 
 class Buttons:
     def __init__(self):
-        self.list = [
+        self.Gamestate0 = [
             Reset(position=(WIDTH+LOGWIDTH-100, HEIGHT-30)),
             Diagnostic(position=(WIDTH+0.1*LOGWIDTH, HEIGHT-30)),
             ActionsButtons(),
             BonusactionsButtons()
         ]
 
-        self.active = []
+        self.ActivePlayerActions = []
 
     
 class Button:
@@ -68,18 +68,26 @@ class ActionsButtons(Button):
         self.y = 50
         self.textcolor = (0, 0, 0)
         self.rectcolor = (110, 110, 110)
+        self.bkgnd_color = ONColor
         self.text = self.font.render(self.content, True, self.textcolor)
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
-
+        self.bkgnd = pygame.Rect((self.x, self.y), (self.width, self.height))
+        
     def blit_button(self, surface):
+        pygame.draw.rect(surface, self.bkgnd_color, self.bkgnd)
         pygame.draw.rect(surface, self.rectcolor, self.rect, 1)
-        surface.blit(self.text, (self.x+(self.width-self.text.get_width())/2, 55))
+        surface.blit(self.text, (self.x+(self.width-self.text.get_width())/2, 57))
 
     def on_click(self, game):
-        if game.ShowAvailable != 'actions':
-            game.ShowAvailable = 'actions'
-        else:
-            game.ShowAvailable = None
+        if game.show_actions == None: game.show_actions = 'Actions'
+        elif game.show_actions == 'Actions': game.show_actions = None
+    
+    def switch_on(self):
+        self.color = ONColor
+    
+    def switch_off(self):
+        self.color = OFFColor
+
 
 class BonusactionsButtons(Button):
     def __init__(self):
@@ -93,19 +101,26 @@ class BonusactionsButtons(Button):
         self.y = 50
         self.textcolor = (0, 0, 0)
         self.rectcolor = (110, 110, 110)
+        self.bkgnd_color = ONColor
         self.text = self.font.render(self.content, True, self.textcolor)
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
+        self.bkgnd = pygame.Rect((self.x, self.y), (self.width, self.height))
 
 
     def blit_button(self, surface):
+        pygame.draw.rect(surface, self.bkgnd_color, self.bkgnd)
         pygame.draw.rect(surface, self.rectcolor, self.rect, 1)
         surface.blit(self.text, (self.x+(self.width-self.text.get_width())/2, 57))
 
     def on_click(self, game):
-        if game.ShowAvailable != 'bonus actions':
-            game.ShowAvailable = 'bonus actions'
-        else:
-            game.ShowAvailable = None
+        if game.show_actions == None: game.show_actions = 'Bonus Actions'
+        elif game.show_actions == 'Bonus Actions': game.show_actions = None
+
+    def switch_on(self):
+        self.color = ONColor
+    
+    def switch_off(self):
+        self.color = OFFColor
 
 
 class Reset(Button):
@@ -142,6 +157,7 @@ class Diagnostic(Button):
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
 
     def on_click(self, game):
+        # print(game.active_player.action)
         game.next_turn()
         pass
 

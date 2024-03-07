@@ -11,11 +11,10 @@ LOGBKGNDCOLOR = (242, 242, 160)
 LOGHEADCOLOR = (242, 210, 160)
 LOGFONT = 'bookmania'
 
-
 #Background and Themes
 BACKGROUND = None
 ONColor = (150, 250, 150)
-OFFColor = (150, 150, 150)
+OFFColor = (250, 150, 150)
 
 
 #Gamesets

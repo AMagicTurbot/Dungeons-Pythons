@@ -2,35 +2,52 @@ from dice import *
 from buttons import *
 
 class Action:
-    def __init__(self,name, cost, token):
+    def __init__(self,name):
         self.name = name
-        self.token = token
-        self.cost = cost
-    
+        
+        self.cost = None
+        self.token = None #to be created automatically as an instance of Action(Button) in the game class
         self.button = None #to be created automatically as an instance of Action(Button) in the game class
         
-
     def __eq__(self, other):
         return self.name == other.name and self.token == other.token
 
     def do(self, game):
         pass
 
-class ExtractWeapon(Action):
-    def __init__(self, weapon, token):
-        self.weapon = weapon
-        name = 'Extract' + weapon.name
-        cost = None
-        super().__init__(name, cost, token)
+    def is_available(self, cost):
+        pass
+
+### Actions Database ###
+#General turn actions
+class Wait(Action):
+    def __init__(self):
+        name = 'Wait'
+        super().__init__(name)
+
+    def is_available(self, token, cost):
+        if cost == 'action':
+            return token.has_action()
+        elif cost == 'bonus action':
+            return token.has_bonus_action()
+
+    def create(self, token, cost):
+        self.token = token
+        self.cost = cost
+        return self
     
     def do(self, game):
-        self.token.weapon = self.weapon
-        game.gamelog.new_line(self.name + ' extracts ' + self.weapon.name)
+        game.gamelog.new_line(self.token.name + ' waits...')
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': self.token.use_bonus_action()
+    
 
+ActionDatabase = {'Wait': Wait()}
 
+#Attacks
 class Attack(Action):
-    def __init__(self, name, cost, token):
-        super().__init__(name, cost, token)
+    def __init__(self, name, token):
+        super().__init__(name, token)
         self.range = 5//UNITLENGHT
         self.target = None
 
@@ -47,9 +64,9 @@ class Attack(Action):
 
 
 class WeaponAttack(Attack):
-    def __init__(self, cost, token, proficient=True):
+    def __init__(self, token, proficient=True):
         name = token.weapon.name + ' attack'
-        super().__init__(name, cost, token)
+        super().__init__(name, token)
         self.proficient = proficient
         self.range = self.token.weapon.range
     

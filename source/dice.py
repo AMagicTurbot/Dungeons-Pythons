@@ -15,8 +15,8 @@ class Dice:
                 rolls.append(np.random.randint(self.faces)+1)
             return rolls
 
-    def roll(self):
-        return self.roll_dice(1)
+    def roll(self, num=1):
+        return self.roll_dice(num)
 
 D20 = Dice(20)
 D12 = Dice(12)

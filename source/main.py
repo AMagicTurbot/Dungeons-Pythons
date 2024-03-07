@@ -5,7 +5,7 @@ from config import *
 from game import Game
 from square import Square
 from move import Move
-from buttons import Buttons
+from buttons import Buttons, Actionbutton
 
 class Main:
 
@@ -18,8 +18,16 @@ class Main:
 
     def show_all(self, screen, game, buttons):
         game.show_all(screen)
-        for button in buttons.list:
+        for button in buttons.Gamestate0:
             button.blit_button(screen)
+        i = 0
+        if game.show_actions == 'Actions':
+            game.get_available_actions()
+            for action in game.active_player.available_actions:
+                action.button = Actionbutton((10 + WIDTH + LOGWIDTH//12, 90 + i*20), action)
+                buttons.ActivePlayerActions.append(action.button)
+                action.button.blit_button(screen)
+                i += 1
 
     def mainloop(self):
         screen = self.screen
@@ -58,11 +66,8 @@ class Main:
                                 self.show_all(screen, game, buttons)
                     
                     #Click on a button
-                    for button in buttons.list:
+                    for button in buttons.Gamestate0:
                         if button.clicked(event):
-                            button.on_click(game)
-
-
                             #Special: Reset button
                             if button.name == 'ResetButton':
                                 game = Game()
@@ -72,7 +77,12 @@ class Main:
                                 gamelog = game.gamelog
                                 game.roll_initiative()
                                 gamelog.new_line(game.print_initiative())
-                    
+                            button.on_click(game)
+                            break
+                    for button in buttons.ActivePlayerActions:
+                        if button.clicked(event):
+                            button.on_click(game)
+                            break
 
                 #Drag a token
                 elif event.type == pygame.MOUSEMOTION:
@@ -100,6 +110,12 @@ class Main:
                     pygame.quit()
                     sys.exit()
         
+                #Game events
+                if game.active_player.has_action: buttons.Gamestate0[2].switch_on()
+                else: buttons.Gamestate0[2].switch_off()
+                if game.active_player.has_bonus_action: buttons.Gamestate0[3].switch_on() 
+                else: buttons.Gamestate0[3].switch_off()
+                
             pygame.display.update()
 
 
