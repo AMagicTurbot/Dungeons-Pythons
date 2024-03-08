@@ -5,7 +5,12 @@ class Action:
     #Rationale:
     # - Actions must be self consistent objects that can be instanciated without any external parameter
     # - Each Action is identified by an unambigous name
-    # - Each Action has a .do(), .is_available(), .requires_target() and .bind() methods
+    # - Each Action has a 
+    #       .is_available(), 
+    #       .requires_target(),
+    #       .create() and
+    #       .do()
+    #        methods
     # - Each Action will be bounded to a token and a cost using the .create() method (in game.get_available_actions())
     # - Unbound actions are used to let the game know what each token is capable of doing
     # - Additional parameters needed to complete the Action data (such as weapons, targets and so on) are added during binding
@@ -27,6 +32,8 @@ class Action:
             return token.has_action()
         elif cost == 'bonus action':
             return token.has_bonus_action()
+        elif cost == None:
+            return True
 
     def requires_target(self):
         return False
@@ -52,10 +59,11 @@ class Wait(Action):
         name = 'Wait'
         super().__init__(name)
 
+    def is_available(self, token, cost):
+        return True
+        
     def do(self, game):
         game.gamelog.new_line(self.token.name + ' waits...')
-        if self.cost == 'action': self.token.use_action()
-        elif self.cost == 'bonus action': self.token.use_bonus_action()
         game.next_turn()
 
 class Dash(Action):
@@ -141,6 +149,38 @@ class WeaponAttack(Attack):
             game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
+
+
+
+#Game Actions
+#Actions taken by the game itself, thus not using the .create method
+class ExtraTurn(Action):
+    def __init__(self, token):
+        name = 'ExtraTurn'
+        super().__init__(name)
+        self.token = token
+
+    def do(self, game):
+        try: self.token.EndTurnActions.remove(ExtraTurn(None))
+        except ValueError: print(self.token.name, [act.name for act in self.token.EndTurnActions])
+        game.gamelog.new_line(self.token.name + ' does an extra turn')
+
+        index = game.initiative_order.index(game.active_player)
+        if index == 0:
+            game.active_player = game.initiative_order[-1]
+        else:
+            game.active_player = game.initiative_order[index-1]
+
+class SkipTurn(Action):
+    def __init__(self, token):
+        name = 'SkipTurn'
+        super().__init__(name)
+        self.token = token
+
+    def do(self, game):
+        self.token.BeginTurnActions.remove(SkipTurn(None))
+        game.gamelog.new_line(self.token.name + ' skips the turn')
+        game.next_turn()
 
 
 ActionDatabase = {  'Wait': Wait(),

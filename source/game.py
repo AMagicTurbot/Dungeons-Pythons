@@ -121,7 +121,7 @@ class Game:
                         break
                 if token not in self.initiative_order: self.initiative_order.append(token)    
         self.active_player=self.initiative_order[0]
-        self.get_available_actions()
+        self.active_player.turn_start()
 
     def print_initiative(self):
         initiative = 'Initiative: '
@@ -130,8 +130,9 @@ class Game:
         return initiative
         
     def get_available_actions(self):
-        self.active_player.available_actions = []
-        for action_name in self.active_player.action_list:                      #Consider token Actions list
+        #Consider token Actions list
+        self.active_player.ActiveTurnActions = []
+        for action_name in self.active_player.action_list:                      
             possible_action = ActionDatabase[action_name]                       
             if possible_action.is_available(self.active_player, 'action'):      #Check if action is available 
                 if possible_action.requires_target():                           #Check if action requires a target 
@@ -140,17 +141,42 @@ class Game:
                     for target in available_targets:
                         #Create action by binding token and cost    
                         action = possible_action.create(self.active_player, 'action', target)
-                        self.active_player.available_actions.append(action) 
+                        self.active_player.ActiveTurnActions.append(action) 
                 else:
-                    action=possible_action.create(self.active_player,'action')  #Create action by binding token and cost                                   
-                    self.active_player.available_actions.append(action)   
-        return self.active_player.available_actions  #For AI player
+                    action = possible_action.create(self.active_player,'action')  #Create action by binding token and cost                                   
+                    self.active_player.ActiveTurnActions.append(action)
+        #Consider token Bonus Actions
+        self.active_player.ActiveTurnBonusActions = []
+        for action_name in self.active_player.bonus_action_list:                
+               possible_action = ActionDatabase[action_name]
+               if possible_action.is_available(self.active_player, 'bonus action'):      #Check if action is available 
+                if possible_action.requires_target():                           #Check if action requires a target 
+                    #scan for available targets
+                    available_targets = possible_action.get_available_targets(self.active_player, self.field) 
+                    for target in available_targets:
+                        #Create action by binding token and cost    
+                        action = possible_action.create(self.active_player, 'bonus action', target)
+                        self.active_player.ActiveTurnBonusActions.append(action) 
+                else:
+                    action = possible_action.create(self.active_player,'bonus action')  #Create action by binding token and cost                                   
+                    self.active_player.ActiveTurnBonusActions.append(action)
+        return self.active_player.ActiveTurnActions, self.active_player.ActiveTurnBonusActions  #For AI player
 
     def next_turn(self):
+        #End-Turn events 
+        for action in self.active_player.EndTurnActions:
+            if action.is_available(self.active_player, None):
+                action.do(self)
+        #Advance Initiative
         index = self.initiative_order.index(self.active_player)
         if index < len(self.initiative_order)-1:
             self.active_player = self.initiative_order[index+1]
         else:
             self.active_player = self.initiative_order[0]
+        #Reset token turn variables
         self.active_player.turn_start()
+        #Start-Turn events 
+        for action in self.active_player.BeginTurnActions:
+            if action.is_available(self.active_player, None):
+                action.do(self)
         

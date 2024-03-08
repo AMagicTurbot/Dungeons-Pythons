@@ -51,7 +51,11 @@ class Creature(Token):
         self.reaction = 1
         #Game actions
         self.action_list = []
-        self.available_actions = []
+        self.bonus_action_list = []
+        self.BeginTurnActions = []
+        self.ActiveTurnActions = []
+        self.ActiveTurnBonusActions = []
+        self.EndTurnActions = []
 
     def add_move(self, move):
         self.moves.append(move)
@@ -119,6 +123,8 @@ class Antonio(Creature):
         self.action_list = ['Wait',
                             'Dash',
                             'Weapon Attack']
+
+        self.bonus_action_list = ['Dash']
 
 
 

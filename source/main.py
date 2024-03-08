@@ -19,14 +19,24 @@ class Main:
 
     def show_all(self, screen, game, buttons):
         game.show_all(screen)
+        #Update A and BA game buttons color
+        if game.active_player.has_action(): buttons.Gamestate0[2].switch_on()
+        else: buttons.Gamestate0[2].switch_off()
+        if game.active_player.has_bonus_action(): buttons.Gamestate0[3].switch_on() 
+        else: buttons.Gamestate0[3].switch_off()
+        #Blit Game buttons
         for button in buttons.Gamestate0:
             button.blit_button(screen)
+        #Blit A and BA buttons
         i = 0
         if game.show_actions == 'Actions':
-            buttons.ActivePlayerActions = []
-            for action in game.active_player.available_actions:
+            for action in game.active_player.ActiveTurnActions:
                 action.button = Actionbutton((10 + WIDTH + LOGWIDTH//12, 90 + i*25), action)
-                buttons.ActivePlayerActions.append(action.button)
+                action.button.blit_button(screen)
+                i += 1
+        elif game.show_actions == 'Bonus Actions':
+            for action in game.active_player.ActiveTurnBonusActions:
+                action.button = Actionbutton((10 + WIDTH + 3*LOGWIDTH//12, 90 + i*25), action)
                 action.button.blit_button(screen)
                 i += 1
 
@@ -43,7 +53,9 @@ class Main:
         gamelog.new_line(game.print_initiative())
 
         while True:
+            game.get_available_actions()
             self.show_all(screen, game, buttons)
+
             if dragger.dragging:
                 dragger.update_blit(screen)
                 
@@ -67,8 +79,23 @@ class Main:
                                 field.get_moves(token, clicked_row, clicked_col)
                                 self.show_all(screen, game, buttons)
                     
+                    #Click outside field
                     else:
-                        #Click on a button
+                        #Clicked on an active player button
+                        if game.show_actions == 'Actions':          
+                            for action in game.active_player.ActiveTurnActions:
+                                if action.button.clicked(event):
+                                    action.button.on_click(game)
+                                    self.show_all(screen, game, buttons)
+                                    break
+                        elif game.show_actions == 'Bonus Actions':          
+                            for action in game.active_player.ActiveTurnBonusActions:
+                                if action.button.clicked(event):
+                                    action.button.on_click(game)
+                                    self.show_all(screen, game, buttons)
+                                    break
+                        
+                        #Clicked on a gamestate button
                         for button in buttons.Gamestate0:
                             if button.clicked(event):
                                 #Special: Reset button
@@ -82,16 +109,8 @@ class Main:
                                     game.roll_initiative()
                                     gamelog.new_line(game.print_initiative())
                                 button.on_click(game)
-                                break
-
-                        for button in buttons.ActivePlayerActions:
-                            if button.clicked(event):
-                                button.on_click(game)
-                                break
-                        game.get_available_actions()
+                                break                     
                     
-                    
-
                 #Drag a token
                 elif event.type == pygame.MOUSEMOTION:
                     if dragger.dragging:
@@ -112,7 +131,6 @@ class Main:
                             gamelog.new_line(str(dragger.token.name) + ' moves by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
                             self.show_all(screen, game, buttons)
                         dragger.release_token()
-                        game.get_available_actions()
 
                 #Quit event
                 elif event.type == pygame.QUIT:
@@ -120,11 +138,7 @@ class Main:
                     pygame.quit()
                     sys.exit()
 
-                #Game events
-                if game.active_player.has_action(): buttons.Gamestate0[2].switch_on()
-                else: buttons.Gamestate0[2].switch_off()
-                if game.active_player.has_bonus_action(): buttons.Gamestate0[3].switch_on() 
-                else: buttons.Gamestate0[3].switch_off()
+                #State-based events
 
             pygame.display.update()
             if MEMORYDIAG: print(tracemalloc.get_traced_memory())

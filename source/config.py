@@ -14,6 +14,7 @@ LOGFONT = 'bookmania'
 #Background and Themes
 BACKGROUND = None
 ONColor = (150, 250, 150)
+ONHighlightColor = (100, 100, 100)
 OFFColor = (250, 150, 150)
 
 
@@ -26,6 +27,6 @@ EnemiesCOLOR = (200, 150, 150)
 
 
 #Config
-MEMORYDIAG = True
+MEMORYDIAG = False
 
 

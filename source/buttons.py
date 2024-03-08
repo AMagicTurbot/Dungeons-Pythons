@@ -12,7 +12,6 @@ class Buttons:
             BonusactionsButtons()
         ]
 
-        self.ActivePlayerActions = []
 
     
 class Button:
