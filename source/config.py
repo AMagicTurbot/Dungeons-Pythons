@@ -25,3 +25,7 @@ PlayersCOLOR = (100, 150, 100)
 EnemiesCOLOR = (200, 150, 150)
 
 
+#Config
+MEMORYDIAG = True
+
+

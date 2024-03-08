@@ -36,6 +36,11 @@ class Action:
         self.cost = cost
         return self
 
+    def unbind(self):
+        self.token = None
+        self.cost = None
+        self.button = None
+
     def do(self, game):
         pass
 
@@ -88,7 +93,6 @@ class Attack(Action):
                         available_targets.append(square.token)
         return available_targets
 
-
 class WeaponAttack(Attack):
     def __init__(self):
         name = 'Weapon Attack'
@@ -96,10 +100,9 @@ class WeaponAttack(Attack):
         self.proficient = False
         self.modifier = 0
     
-    def __deepcopy__(self):
-        return WeaponAttack()
     def create(self, token, cost, target):
-        new_instance = self.__deepcopy__()
+        del self
+        new_instance = WeaponAttack()
         new_instance.token = token
         new_instance.name = token.weapon.name + ' attack vs ' + target.name
         new_instance.range = new_instance.token.weapon.range

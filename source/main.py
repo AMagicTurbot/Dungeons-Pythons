@@ -1,5 +1,6 @@
 import pygame
 import sys
+import tracemalloc
 
 from config import *
 from game import Game
@@ -30,6 +31,7 @@ class Main:
                 i += 1
 
     def mainloop(self):
+        if MEMORYDIAG: tracemalloc.start()
         screen = self.screen
         game = self.game
         field = self.game.field
@@ -71,6 +73,7 @@ class Main:
                             if button.clicked(event):
                                 #Special: Reset button
                                 if button.name == 'ResetButton':
+                                    del game, buttons
                                     game = Game()
                                     field = game.field
                                     dragger = game.dragger
@@ -113,6 +116,7 @@ class Main:
 
                 #Quit event
                 elif event.type == pygame.QUIT:
+                    if MEMORYDIAG: tracemalloc.stop()
                     pygame.quit()
                     sys.exit()
 
@@ -123,12 +127,10 @@ class Main:
                 else: buttons.Gamestate0[3].switch_off()
 
             pygame.display.update()
+            if MEMORYDIAG: print(tracemalloc.get_traced_memory())
 
             
 
             
-
-
-
 main = Main()
 main.mainloop()

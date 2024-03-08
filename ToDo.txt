@@ -1,8 +1,12 @@
 
-DONE: Implemented dice advantage/disadvantage roll
-DONE: Fixed main loop to correctly change buttons color when action is unavailable
-DONE: "Dash" Action 
-DONE: "Attack" Action(s)
 
 Create standard Creature Actions: Dodge
 create a game blit to show health bars
+add a cleanup step (del ) before instanciating new object to optimize memory
+
+Idea: create token variables to store actions as:
+    BeginTurnActions = []
+    ActiveTurnActions = [] (replacing buttons.ActivePlayerActions)
+    EndTurnActions = []
+then the game.next_turn() method can call the action.do() method on turn change at the correct moment,
+while game events (maily other actions) can add/remove actions from the 3 TurnActions lists. 
