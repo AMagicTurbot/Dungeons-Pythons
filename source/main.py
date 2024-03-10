@@ -130,6 +130,16 @@ class Main:
                             #Move token
                             movedistance = field.move(dragger.token, move)
                             gamelog.new_line(str(dragger.token.name) + ' moves by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
+                            #Check for opportunity attacks
+                            if not dragger.token.freemoving:
+                                for row in [dragger.initial_row-1, dragger.initial_row, dragger.initial_row+1]:
+                                    for col in [dragger.initial_col-1, dragger.initial_col, dragger.initial_col+1]:
+                                        if Square.on_field(row, col):
+                                            if field.squares[row][col].has_enemy(dragger.token.team):
+                                                if field.squares[row][col].distance(final)>1:
+                                                    if 'Weapon Attack' in dragger.token.action_list and field.squares[row][col].token.weapon.range <= 1:
+                                                        action = ActionDatabase['Weapon Attack'].create(field.squares[row][col].token, 'reaction', dragger.token)
+                                                        if action.is_available(field.squares[row][col].token, 'reaction'): action.do(game)
                             self.show_all(screen, game, buttons)
                         dragger.release_token()
 
@@ -148,6 +158,8 @@ class Main:
                                 #Death
                                 if token.Hp <= 0:
                                     gamelog.new_line(token.name + ' died!')
+                                    if token == game.active_player:
+                                        game.next_turn()
                                     game.initiative_order.remove(token)
                                     field.squares[row][col].token = tombstone(token.name)
 

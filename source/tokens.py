@@ -48,6 +48,7 @@ class Creature(Token):
         self.reaction = 1
         #Status
         self.is_dodging = False
+        self.freemoving = False
         #Game actions
         self.action_list = []
         self.bonus_action_list = []
@@ -119,6 +120,7 @@ class Antonio(Creature):
         self.action_list = ['Pass',
                             'Dash',
                             'Dodge',
+                            'Disengage',
                             'Weapon Attack']
 
         self.bonus_action_list = ['Dash']
@@ -140,12 +142,13 @@ class Kenku(Creature):
         self.Hp = self.MaxHp
         #Equipment
         self.proficiencies = []
-        self.weapon = Shortbow
+        self.weapon = Shortsword
         self.ArmorClass = 12
         #Actions
         self.action_list = ['Pass',
                             'Dash',
                             'Dodge',
+                            'Disengage',
                             'Weapon Attack']
 
 

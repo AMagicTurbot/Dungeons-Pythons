@@ -32,6 +32,8 @@ class Action:
             return token.has_action()
         elif cost == 'bonus action':
             return token.has_bonus_action()
+        elif cost == 'reaction':
+            return token.has_reaction()
         elif cost == None:
             return True
 
@@ -61,7 +63,14 @@ class Pass(Action):
 
     def is_available(self, token, cost):
         return True
-        
+    
+    def create(self, token, cost):
+        del self
+        new_instance = Pass()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
     def do(self, game):
         game.gamelog.new_line(self.token.name + ' ends its turn')
         game.next_turn()
@@ -71,6 +80,13 @@ class Dash(Action):
         name = 'Dash'
         super().__init__(name)
     
+    def create(self, token, cost):
+        del self
+        new_instance = Dash()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
     def do(self, game):
         #Instructions
         self.token.current_movement += self.token.speed
@@ -85,6 +101,13 @@ class Dodge(Action):
         name = 'Dodge'
         super().__init__(name)
 
+    def create(self, token, cost):
+        del self
+        new_instance = Dodge()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
     def do(self, game):
         #Instructions
         self.token.is_dodging = True
@@ -93,6 +116,29 @@ class Dodge(Action):
         #Cost
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
+
+class Disengage(Action):
+    def __init__(self):
+        name = 'Disengage'
+        super().__init__(name)
+
+    def create(self, token, cost):
+        del self
+        new_instance = Disengage()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
+    def do(self, game):
+        #Instructions
+        self.token.freemoving = True
+        self.token.EndTurnActions.append(EndDisengage(self.token))
+        #Log
+        game.gamelog.new_line(self.token.name + ' disengages.')
+        #Cost
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': self.token.use_bonus_action()
+
 
 #Attacks Action
 #Attacks require a TARGET, which is found by scanning squares within a certain RANGE for enemy tokens
@@ -106,6 +152,13 @@ class Attack(Action):
     def requires_target(self):
         return True
 
+    def create(self, token, cost, name):
+        del self
+        new_instance = Attack(name)
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+    
     def get_available_targets(self, token, field):
         available_targets = []
         for rows in field.squares:
@@ -171,9 +224,23 @@ class WeaponAttack(Attack):
             game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
+        elif self.cost == 'reaction': self.token.use_reaction()
 
 #Game Actions
 #Actions taken by the game itself, thus not using the .create method
+class EndDisengage(Action):
+    def __init__(self, token, delay = 1):
+        name = 'EndDisengage'
+        super().__init__(name)
+        self.token = token
+        self.delay = delay
+    
+    def do(self, game):
+        self.delay -= 1
+        if self.delay <= 0:
+            self.token.EndTurnActions.remove(ExtraTurn(None))
+            self.freemoving = False
+
 class ExtraTurn(Action):
     def __init__(self, token):
         name = 'ExtraTurn'
@@ -181,10 +248,8 @@ class ExtraTurn(Action):
         self.token = token
 
     def do(self, game):
-        try: self.token.EndTurnActions.remove(ExtraTurn(None))
-        except ValueError: print(self.token.name, [act.name for act in self.token.EndTurnActions])
+        self.token.EndTurnActions.remove(ExtraTurn(None))
         game.gamelog.new_line(self.token.name + ' does an extra turn')
-
         index = game.initiative_order.index(game.active_player)
         if index == 0:
             game.active_player = game.initiative_order[-1]
@@ -206,4 +271,5 @@ class SkipTurn(Action):
 ActionDatabase = {  'Pass': Pass(),
                     'Dash': Dash(),
                     'Dodge': Dodge(),
+                    'Disengage': Disengage(),
                     'Weapon Attack': WeaponAttack()}

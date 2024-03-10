@@ -32,9 +32,9 @@ class Square:
 
     @staticmethod
     def on_field(row, col):
-        if row > ROWS or row < 0:
+        if row > ROWS-1 or row < 0:
             return False
-        if col > COLS or col < 0:
+        if col > COLS-1 or col < 0:
             return False
         return True
 

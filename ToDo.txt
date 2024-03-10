@@ -1,9 +1,6 @@
 
-DONE: Dodge Action
-DONE: Healt bars
-DONE: Death
-
-Implement Opportunity Attacks
+DONE: Opportunity Attacks
+Create Disengage Action
 Implement Critical hits
 
 add a cleanup step ('del ...') before re-instanciating (' = ') objects to optimize memory
