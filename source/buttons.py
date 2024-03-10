@@ -82,11 +82,8 @@ class ActionsButtons(Button):
         surface.blit(self.text, (self.x+(self.width-self.text.get_width())/2, 57))
 
     def on_click(self, game):
-        if game.active_player.has_action():
-            if game.show_actions != 'Actions': game.show_actions = 'Actions'
-            else: game.show_actions = None
-        else:
-            pass
+        if game.show_actions != 'Actions': game.show_actions = 'Actions'
+        else: game.show_actions = None
     
     def switch_on(self):
         self.bkgnd_color = ONColor

@@ -68,7 +68,7 @@ class Pass(Action):
         del self
         new_instance = Pass()
         new_instance.token = token
-        new_instance.cost = cost
+        new_instance.cost = None
         return new_instance
 
     def do(self, game):
@@ -238,9 +238,9 @@ class EndDisengage(Action):
     def do(self, game):
         self.delay -= 1
         if self.delay <= 0:
-            self.token.EndTurnActions.remove(ExtraTurn(None))
-            self.freemoving = False
-
+            self.token.freemoving = False
+            self.token.EndTurnActions.remove(EndDisengage(None))
+            
 class ExtraTurn(Action):
     def __init__(self, token):
         name = 'ExtraTurn'
