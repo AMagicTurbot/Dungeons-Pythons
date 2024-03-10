@@ -30,9 +30,6 @@ class Token:
         try: self.texture = os.path.join(f'assets/images/tokens/{self.name}.png')
         except: self.texture = os.path.join(f'assets/images/tokens/Antonio.png')
         
-    
-
-
 #Playable tokens
 class Creature(Token):
     def __init__(self, name, team, speed=0):
@@ -49,6 +46,8 @@ class Creature(Token):
         self.action = 1
         self.bonus_action = 1
         self.reaction = 1
+        #Status
+        self.is_dodging = False
         #Game actions
         self.action_list = []
         self.bonus_action_list = []
@@ -83,6 +82,7 @@ class Creature(Token):
         self.recover_bonus_action()
         self.recover_reaction()
         self.current_movement=self.speed
+        self.is_dodging = False
 
     def has_action(self):
         return self.action==1
@@ -90,11 +90,7 @@ class Creature(Token):
         return self.bonus_action==1
     def has_reaction(self):
         return self.reaction==1
-
-
-
-    
-
+   
 #Preset characters
 class Antonio(Creature): 
     def __init__(self, name='Antonio', team='players'):
@@ -120,15 +116,12 @@ class Antonio(Creature):
         self.ArmorClass = 15
 
         #Actions
-        self.action_list = ['Wait',
+        self.action_list = ['Pass',
                             'Dash',
+                            'Dodge',
                             'Weapon Attack']
 
         self.bonus_action_list = ['Dash']
-
-
-
-
 
 class Kenku(Creature):
     def __init__(self, name='Kenku', team='enemies'):
@@ -137,25 +130,22 @@ class Kenku(Creature):
         self.name=name
         self.speed = 10 // UNITLENGHT
         self.proficiency = 2
-
         #Characteristics
         self.str = 8
         self.str_bonus = Creature._bonus(self.str)
         self.dex = 14
         self.dex_bonus = Creature._bonus(self.dex)
-
         #Status
         self.MaxHp = 5
         self.Hp = self.MaxHp
-
         #Equipment
         self.proficiencies = []
         self.weapon = Shortbow
         self.ArmorClass = 12
-
         #Actions
-        self.action_list = ['Wait',
+        self.action_list = ['Pass',
                             'Dash',
+                            'Dodge',
                             'Weapon Attack']
 
 
@@ -168,6 +158,12 @@ class Object(Token):
 class stones(Object):
     def __init__(self):
         super().__init__('stones')
+
+class tombstone(Object):
+    def __init__(self, name):
+        super().__init__('tombstone')
+        self.name = name
+
 
 
         

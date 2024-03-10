@@ -1,8 +1,9 @@
 
-DONE: Actions and Buttons now stored in token.ActiveTurnActions
-DONE: Implemented BeginTurnActions and EndTurnActions
-DONE: Updated game to work with Bonus Action
+DONE: Dodge Action
+DONE: Healt bars
+DONE: Death
 
-Create standard Creature Actions: Dodge
-create a game blit to show health bars
-add a cleanup step (del ) before instanciating new object to optimize memory
+Implement Opportunity Attacks
+Implement Critical hits
+
+add a cleanup step ('del ...') before re-instanciating (' = ') objects to optimize memory

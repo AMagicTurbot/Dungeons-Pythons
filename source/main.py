@@ -3,6 +3,7 @@ import sys
 import tracemalloc
 
 from config import *
+from tokens import *
 from game import Game
 from square import Square
 from move import Move
@@ -139,6 +140,16 @@ class Main:
                     sys.exit()
 
                 #State-based events
+                for row in range(ROWS):
+                    for col in range(COLS):
+                        if field.squares[row][col].is_occupied():
+                            token = field.squares[row][col].token
+                            if isinstance(token, Creature):
+                                #Death
+                                if token.Hp <= 0:
+                                    gamelog.new_line(token.name + ' died!')
+                                    game.initiative_order.remove(token)
+                                    field.squares[row][col].token = tombstone(token.name)
 
             pygame.display.update()
             if MEMORYDIAG: print(tracemalloc.get_traced_memory())

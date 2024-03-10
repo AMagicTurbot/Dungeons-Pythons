@@ -2,6 +2,7 @@ import pygame
 
 from config import *
 from dice import *
+from tokens import Creature
 from init import Init
 from field import Field
 from dragger import Dragger
@@ -47,10 +48,19 @@ class Game:
                 if self.field.squares[row][col].is_occupied():
                     token = self.field.squares[row][col].token
                     if token is not self.dragger.token: #Don't show dragged pieces
+                        #Token
                         img = pygame.image.load(token.texture)
                         img_center = col*SQSIZE+SQSIZE//2, row*SQSIZE+SQSIZE//2
                         token.texture_rect = img.get_rect(center=img_center)
                         surface.blit(img, token.texture_rect)
+                        #Hp bar
+                        if isinstance(token, Creature):
+                            HPWidth = (token.Hp/token.MaxHp)*SQSIZE
+                            HPRect = pygame.Rect((col*SQSIZE, row*SQSIZE), (HPWidth, 0.1*SQSIZE))
+                            EmpyRect = pygame.Rect((col*SQSIZE, row*SQSIZE), (SQSIZE, 0.1*SQSIZE))
+                            pygame.draw.rect(surface, LOGBKGNDCOLOR, EmpyRect)
+                            pygame.draw.rect(surface, ONColor, HPRect)
+                        
 
     def show_moves(self, surface):
         if self.dragger.dragging and self.dragger.token.can_move:

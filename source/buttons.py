@@ -155,7 +155,7 @@ class Diagnostic(Button):
         super().__init__('DiagnosticButton')
         self.fontsize = 20
         self.font = pygame.font.SysFont(LOGFONT, self.fontsize)
-        self.content = 'Next Turn'
+        self.content = 'Current Hp'
         self.width = 0.65*self.fontsize*len(self.content)
         self.height = self.fontsize*1.3
         self.x = position[0]
@@ -166,7 +166,7 @@ class Diagnostic(Button):
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
 
     def on_click(self, game):
-        game.next_turn()
+        print(str(game.active_player.Hp) + ' / ' + str(game.active_player.MaxHp))
         pass
 
         

@@ -54,16 +54,16 @@ class Action:
 ### Actions Database ###
 
 #General turn actions
-class Wait(Action):
+class Pass(Action):
     def __init__(self):
-        name = 'Wait'
+        name = 'Pass'
         super().__init__(name)
 
     def is_available(self, token, cost):
         return True
         
     def do(self, game):
-        game.gamelog.new_line(self.token.name + ' waits...')
+        game.gamelog.new_line(self.token.name + ' ends its turn')
         game.next_turn()
 
 class Dash(Action):
@@ -72,8 +72,25 @@ class Dash(Action):
         super().__init__(name)
     
     def do(self, game):
+        #Instructions
         self.token.current_movement += self.token.speed
+        #Log
         game.gamelog.new_line(self.token.name + ' dashes.')
+        #Cost
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': self.token.use_bonus_action()
+
+class Dodge(Action):
+    def __init__(self):
+        name = 'Dodge'
+        super().__init__(name)
+
+    def do(self, game):
+        #Instructions
+        self.token.is_dodging = True
+        #Log
+        game.gamelog.new_line(self.token.name + ' dodges.')
+        #Cost
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
 
@@ -84,6 +101,7 @@ class Attack(Action):
         super().__init__(name)
         self.range = 5//UNITLENGHT
         self.target = None
+        self.modifier = 0
     
     def requires_target(self):
         return True
@@ -101,12 +119,17 @@ class Attack(Action):
                         available_targets.append(square.token)
         return available_targets
 
+    def _attack(self, modifier):
+        if self.target.is_dodging: roll = D20.roll(disadvantage=True)
+        else: roll = D20.roll()
+        roll += modifier
+        return roll
+
 class WeaponAttack(Attack):
     def __init__(self):
         name = 'Weapon Attack'
         super().__init__(name)
         self.proficient = False
-        self.modifier = 0
     
     def create(self, token, cost, target):
         del self
@@ -120,13 +143,12 @@ class WeaponAttack(Attack):
         return new_instance
 
     def attack(self):
-        roll = D20.roll()
         if self.token.weapon.range > 1 or 'finesse' in self.token.weapon.attributes:
-            roll += self.token.dex_bonus
+            mod = self.token.dex_bonus
         else:
-            roll += self.token.str_bonus
-        if self.proficient: roll+= self.token.proficiency
-        roll += self.modifier
+            mod = self.token.str_bonus
+        if self.proficient: mod += self.token.proficiency
+        roll = self._attack(mod) + self.modifier
         return roll
     
     def damage(self):
@@ -149,8 +171,6 @@ class WeaponAttack(Attack):
             game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
-
-
 
 #Game Actions
 #Actions taken by the game itself, thus not using the .create method
@@ -183,6 +203,7 @@ class SkipTurn(Action):
         game.next_turn()
 
 
-ActionDatabase = {  'Wait': Wait(),
+ActionDatabase = {  'Pass': Pass(),
                     'Dash': Dash(),
+                    'Dodge': Dodge(),
                     'Weapon Attack': WeaponAttack()}

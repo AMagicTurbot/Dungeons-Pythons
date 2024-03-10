@@ -8,11 +8,14 @@ class Dice:
 
     def roll_dice(self, number):
         if number == 1:
-            return np.random.randint(self.faces)+1
+            roll = np.random.randint(self.faces)+1
+            print('Roll 1D' + str(self.faces) + ': ' + str(roll))
+            return roll
         else:
             rolls = []
             for i in range(number):
                 rolls.append(np.random.randint(self.faces)+1)
+            print('Roll '+str(number)+'D' + str(self.faces) + ': ' + str(rolls))
             return rolls
 
     def roll(self, num=1, advantage=False, disadvantage=False):
@@ -20,12 +23,14 @@ class Dice:
             return self.roll_dice(num)
         elif advantage:
             rolls = [self.roll_dice(num), self.roll_dice(num)]
-            print(rolls)
-            return max(rolls)
+            roll = max(rolls)
+            print('Advantage-> ' + str(roll))
+            return roll
         elif disadvantage:
             rolls = [self.roll_dice(num), self.roll_dice(num)]
-            print(rolls)
-            return min(rolls)
+            roll = min(rolls)
+            print('Disadvantage-> ' + str(roll))
+            return roll
         
         
 
