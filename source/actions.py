@@ -148,6 +148,7 @@ class Attack(Action):
         self.range = 5//UNITLENGHT
         self.target = None
         self.modifier = 0
+        self.is_critical = False
     
     def requires_target(self):
         return True
@@ -175,6 +176,8 @@ class Attack(Action):
     def _attack(self, modifier):
         if self.target.is_dodging: roll = D20.roll(disadvantage=True)
         else: roll = D20.roll()
+        if roll == 20: self.is_critical = True
+        else: self.is_critical = False
         roll += modifier
         return roll
 
@@ -206,6 +209,7 @@ class WeaponAttack(Attack):
     
     def damage(self):
         roll = self.token.weapon.DamageDice.roll()
+        if self.is_critical: roll += self.token.weapon.DamageDice.roll()
         if self.token.weapon.range > 1  or 'finesse' in self.token.weapon.attributes:
             roll += self.token.dex_bonus
         else:
@@ -218,7 +222,8 @@ class WeaponAttack(Attack):
         game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name)
         if AttackRoll >= self.target.ArmorClass:
             DamageRoll = self.damage()
-            game.gamelog.new_line(str(AttackRoll) + ' to hit: Hits for '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            if self.is_critical: game.gamelog.new_line(str(AttackRoll) + ' to hit: Critical hit! '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            else: game.gamelog.new_line(str(AttackRoll) + ' to hit: Hits for '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
             self.target.Hp -= DamageRoll
         else: 
             game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')

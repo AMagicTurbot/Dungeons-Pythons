@@ -1,6 +1,4 @@
 
-DONE: Opportunity Attacks
-Create Disengage Action
 Implement Critical hits
 
 add a cleanup step ('del ...') before re-instanciating (' = ') objects to optimize memory

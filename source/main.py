@@ -139,7 +139,9 @@ class Main:
                                                 if field.squares[row][col].distance(final)>1:
                                                     if 'Weapon Attack' in dragger.token.action_list and field.squares[row][col].token.weapon.range <= 1:
                                                         action = ActionDatabase['Weapon Attack'].create(field.squares[row][col].token, 'reaction', dragger.token)
-                                                        if action.is_available(field.squares[row][col].token, 'reaction'): action.do(game)
+                                                        if action.is_available(field.squares[row][col].token, 'reaction'): 
+                                                            game.gamelog.new_line('Opportunity Attack!')
+                                                            action.do(game)                                                            
                             self.show_all(screen, game, buttons)
                         dragger.release_token()
 
