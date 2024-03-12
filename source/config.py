@@ -21,8 +21,8 @@ OFFColor = (250, 150, 150)
 UNITLENGHT = 5 #distances in feets
 LENGHTNAME = 'feet'
 
-PlayersCOLOR = (100, 150, 100)
-EnemiesCOLOR = (200, 150, 150)
+PlayersCOLOR = (100, 160, 100)
+EnemiesCOLOR = (200, 160, 150)
 
 
 #Config

@@ -25,7 +25,10 @@ class Action:
         self.button = None 
         
     def __eq__(self, other):
-        return self.name == other.name
+        if other == None:
+            return False
+        else:
+            return self.name == other.name
 
     def is_available(self, token, cost):
         if cost == 'action':
@@ -143,25 +146,30 @@ class Disengage(Action):
 #Attacks Action
 #Attacks require a TARGET, which is found by scanning squares within a certain RANGE for enemy tokens
 class Attack(Action):
-    def __init__(self, name):
+    def __init__(self):
+        name = 'Attack'
         super().__init__(name)
-        self.range = 5//UNITLENGHT
+        self.range = 1
         self.target = None
         self.modifier = 0
         self.is_critical = False
+        self.available_targets = []
     
     def requires_target(self):
         return True
+    
+    def set_target(self, targets):
+        self.target = targets
 
-    def create(self, token, cost, name):
+    def create(self, token, cost):
         del self
-        new_instance = Attack(name)
+        new_instance = Attack()
         new_instance.token = token
         new_instance.cost = cost
         return new_instance
-    
+
     def get_available_targets(self, token, field):
-        available_targets = []
+        self.available_targets = []
         for rows in field.squares:
             for square in rows:
                 if square.token == token:
@@ -169,9 +177,18 @@ class Attack(Action):
         for rows in field.squares:
             for square in rows:
                 if square.has_enemy(token.team): 
-                    if initial_square.distance(square)<=token.weapon.range:
-                        available_targets.append(square.token)
-        return available_targets
+                    if initial_square.distance(square)<=self.range:
+                        self.available_targets.append(square)
+        return square
+    
+    def is_valid_target(self, initial_square, final_square, token):
+        if final_square.has_enemy(token.team): 
+            if final_square.distance(initial_square)<=self.token.weapon.range:
+                return True
+            else:
+                return False
+        else:
+            return False
 
     def _attack(self, modifier):
         if self.target.is_dodging: roll = D20.roll(disadvantage=True)
@@ -183,19 +200,18 @@ class Attack(Action):
 
 class WeaponAttack(Attack):
     def __init__(self):
-        name = 'Weapon Attack'
-        super().__init__(name)
+        super().__init__()
+        self.name = 'Weapon Attack'
         self.proficient = False
     
-    def create(self, token, cost, target):
+    def create(self, token, cost):
         del self
         new_instance = WeaponAttack()
         new_instance.token = token
-        new_instance.name = token.weapon.name + ' attack vs ' + target.name
+        new_instance.name = token.weapon.name + ' attack'
         new_instance.range = new_instance.token.weapon.range
         new_instance.proficient = bool(token.weapon.name in token.proficiencies)
         new_instance.cost = cost
-        new_instance.target = target
         return new_instance
 
     def attack(self):

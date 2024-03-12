@@ -2,7 +2,7 @@ import pygame
 
 from config import *
 from dice import *
-from tokens import Creature
+from tokens import Creature, Target
 from init import Init
 from field import Field
 from dragger import Dragger
@@ -25,8 +25,8 @@ class Game:
     def show_all(self, surface):
         self.show_field(surface)
         self.show_interface(surface)
-        self.show_moves(surface)
         self.show_tokens(surface)
+        self.show_moves(surface)
         self.show_gamelog(surface)
 
     def show_field(self, surface):
@@ -65,13 +65,25 @@ class Game:
     def show_moves(self, surface):
         if self.dragger.dragging and self.dragger.token.can_move:
             token = self.dragger.token
+            if token.team == 'players':
+                color = PlayersCOLOR
+            else:
+                color = EnemiesCOLOR
             for move in token.moves:
-                if token.team == 'players':
-                    color = PlayersCOLOR
-                else:
-                    color = EnemiesCOLOR
                 rect = (move.final.col*SQSIZE, move.final.row*SQSIZE , SQSIZE, SQSIZE)
                 pygame.draw.rect(surface, color, rect, 4)
+        elif self.dragger.dragging and self.dragger.targetting:
+            if self.dragger.token.team == 'players':
+                color = PlayersCOLOR
+            else:
+                color = EnemiesCOLOR
+            for square in self.dragger.action.available_targets:
+                TargetImg = Target()
+                img = pygame.image.load(TargetImg.texture)
+                img_center = ((square.col+0.5)*SQSIZE, (square.row+0.5)*SQSIZE)
+                square.token.texture_rect = img.get_rect(center=img_center)
+                surface.blit(img, square.token.texture_rect)
+                
 
     def show_interface(self, surface):
         #Active player
@@ -144,33 +156,19 @@ class Game:
         self.active_player.ActiveTurnActions = []
         for action_name in self.active_player.action_list:                      
             possible_action = ActionDatabase[action_name]                       
-            if possible_action.is_available(self.active_player, 'action'):      #Check if action is available 
-                if possible_action.requires_target():                           #Check if action requires a target 
-                    #scan for available targets
-                    available_targets = possible_action.get_available_targets(self.active_player, self.field) 
-                    for target in available_targets:
-                        #Create action by binding token and cost    
-                        action = possible_action.create(self.active_player, 'action', target)
-                        self.active_player.ActiveTurnActions.append(action) 
-                else:
-                    action = possible_action.create(self.active_player,'action')  #Create action by binding token and cost                                   
-                    self.active_player.ActiveTurnActions.append(action)
+            if possible_action.is_available(self.active_player, 'action'):          #Check if action is available 
+                action = possible_action.create(self.active_player,'action')        #Create action by binding token and cost   
+                if action.requires_target(): 
+                    action.get_available_targets(self.active_player, self.field)   
+                    if len(action.available_targets)>0: self.active_player.ActiveTurnActions.append(action)                        
+                else: self.active_player.ActiveTurnActions.append(action)
         #Consider token Bonus Actions
         self.active_player.ActiveTurnBonusActions = []
         for action_name in self.active_player.bonus_action_list:                
-               possible_action = ActionDatabase[action_name]
-               if possible_action.is_available(self.active_player, 'bonus action'):      #Check if action is available 
-                if possible_action.requires_target():                           #Check if action requires a target 
-                    #scan for available targets
-                    available_targets = possible_action.get_available_targets(self.active_player, self.field) 
-                    for target in available_targets:
-                        #Create action by binding token and cost    
-                        action = possible_action.create(self.active_player, 'bonus action', target)
-                        self.active_player.ActiveTurnBonusActions.append(action) 
-                else:
-                    action = possible_action.create(self.active_player,'bonus action')  #Create action by binding token and cost                                   
-                    self.active_player.ActiveTurnBonusActions.append(action)
-        return self.active_player.ActiveTurnActions, self.active_player.ActiveTurnBonusActions  #For AI player
+            possible_action = ActionDatabase[action_name]
+            if possible_action.is_available(self.active_player, 'bonus action'):    #Check if action is available 
+                action = possible_action.create(self.active_player,'bonus action')  #Create action by binding token and cost                                   
+                self.active_player.ActiveTurnBonusActions.append(action)
 
     def next_turn(self):
         #End-Turn events 

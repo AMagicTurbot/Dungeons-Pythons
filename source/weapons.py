@@ -19,5 +19,5 @@ Shortsword = Weapon('Shortsword',
 
 Shortbow = Weapon('Shortbow', 
                     'Simple', 20//UNITLENGHT, 
-                    D6, 'slashing', 
+                    D6, 'piercing', 
                     ['ammunition'])

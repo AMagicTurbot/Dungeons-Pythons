@@ -12,5 +12,3 @@ class Init:
         self.objects = [
             [stones(), 2, 2] 
         ]
-
-

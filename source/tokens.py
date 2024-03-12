@@ -30,6 +30,11 @@ class Token:
         try: self.texture = os.path.join(f'assets/images/tokens/{self.name}.png')
         except: self.texture = os.path.join(f'assets/images/tokens/Antonio.png')
         
+class Target(Token):
+    def __init__(self):
+        super().__init__('target')
+        self.texture = os.path.join(f'assets/images/backgrounds/{self.name}.png')
+        
 #Playable tokens
 class Creature(Token):
     def __init__(self, name, team, speed=0):
@@ -142,7 +147,7 @@ class Kenku(Creature):
         self.Hp = self.MaxHp
         #Equipment
         self.proficiencies = []
-        self.weapon = Shortsword
+        self.weapon = Shortbow
         self.ArmorClass = 12
         #Actions
         self.action_list = ['Pass',
