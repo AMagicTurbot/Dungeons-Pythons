@@ -16,7 +16,7 @@ class Dice:
             for i in range(number):
                 rolls.append(np.random.randint(self.faces)+1)
             print('Roll '+str(number)+'D' + str(self.faces) + ': ' + str(rolls))
-            return rolls
+            return sum(rolls)
 
     def roll(self, num=1, advantage=False, disadvantage=False):
         if advantage and disadvantage or not advantage and not disadvantage:

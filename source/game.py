@@ -81,8 +81,8 @@ class Game:
                 TargetImg = Target()
                 img = pygame.image.load(TargetImg.texture)
                 img_center = ((square.col+0.5)*SQSIZE, (square.row+0.5)*SQSIZE)
-                square.token.texture_rect = img.get_rect(center=img_center)
-                surface.blit(img, square.token.texture_rect)
+                surface.blit(img, img.get_rect(center=img_center))
+                
                 
 
     def show_interface(self, surface):
@@ -148,7 +148,7 @@ class Game:
     def print_initiative(self):
         initiative = 'Initiative: '
         for token in self.initiative_order:
-            initiative += str(token) + '(' + str(token.initiative) + '), '
+            initiative += str(token) + ' ,'
         return initiative
         
     def get_available_actions(self):
@@ -167,8 +167,12 @@ class Game:
         for action_name in self.active_player.bonus_action_list:                
             possible_action = ActionDatabase[action_name]
             if possible_action.is_available(self.active_player, 'bonus action'):    #Check if action is available 
-                action = possible_action.create(self.active_player,'bonus action')  #Create action by binding token and cost                                   
-                self.active_player.ActiveTurnBonusActions.append(action)
+                action = possible_action.create(self.active_player,'bonus action')  #Create action by binding token and cost
+                if action.requires_target(): 
+                    action.get_available_targets(self.active_player, self.field)   
+                    if len(action.available_targets)>0: self.active_player.ActiveTurnBonusActions.append(action)                        
+                else: self.active_player.ActiveTurnBonusActions.append(action)                                   
+
 
     def next_turn(self):
         #End-Turn events 

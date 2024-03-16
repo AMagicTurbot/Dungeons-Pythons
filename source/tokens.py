@@ -54,6 +54,9 @@ class Creature(Token):
         #Status
         self.is_dodging = False
         self.freemoving = False
+        self.is_triangulated = [False, 0, 0]
+        self.has_bonus_cast = False
+        self.has_action_cast = False
         #Game actions
         self.action_list = []
         self.bonus_action_list = []
@@ -89,6 +92,8 @@ class Creature(Token):
         self.recover_reaction()
         self.current_movement=self.speed
         self.is_dodging = False
+        self.has_bonus_cast = False
+        self.has_action_cast = False
 
     def has_action(self):
         return self.action==1
@@ -136,19 +141,19 @@ class Kenku(Creature):
         super().__init__(spritename, team)
         self.name=name
         self.speed = 10 // UNITLENGHT
-        self.proficiency = 2
+        self.proficiency = 3
         #Characteristics
-        self.str = 8
+        self.str = 14
         self.str_bonus = Creature._bonus(self.str)
-        self.dex = 14
+        self.dex = 16
         self.dex_bonus = Creature._bonus(self.dex)
         #Status
         self.MaxHp = 5
         self.Hp = self.MaxHp
         #Equipment
-        self.proficiencies = []
+        self.proficiencies = ['Shortbow', 'Shortsword']
         self.weapon = Shortbow
-        self.ArmorClass = 12
+        self.ArmorClass = 13
         #Actions
         self.action_list = ['Pass',
                             'Dash',

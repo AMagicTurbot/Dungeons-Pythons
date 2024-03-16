@@ -100,7 +100,15 @@ class Main:
                         elif game.show_actions == 'Bonus Actions':          
                             for action in game.active_player.ActiveTurnBonusActions:
                                 if action.button.clicked(event):
-                                    action.button.on_click(game)
+                                    if action.requires_target():
+                                        for row in range(ROWS):
+                                            for col in range(COLS):
+                                                if field.squares[row][col].token == action.token:
+                                                    token_square = field.squares[row][col]
+                                        dragger.save_initial(token_square)
+                                        dragger.drag_target(action)
+                                    else:
+                                        action.button.on_click(game)
                                     self.show_all(screen, game, buttons)
                                     break
                         
@@ -136,7 +144,7 @@ class Main:
                                 final = field.squares[released_row][releades_col]
                                 #Check if action target is valid
                                 if dragger.action.is_valid_target(initial, final, dragger.action.token):
-                                    dragger.action.set_target(final.token)
+                                    dragger.action.set_target(final.token, final, initial)
                                     dragger.action.do(game)
                                     self.show_all(screen, game, buttons)
                         else:
@@ -154,10 +162,11 @@ class Main:
                                         for col in [dragger.initial_col-1, dragger.initial_col, dragger.initial_col+1]:
                                             if Square.on_field(row, col):
                                                 if field.squares[row][col].has_enemy(dragger.token.team):
+                                                    #Only melee weapons can make AoO
                                                     if field.squares[row][col].distance(final)>1:
                                                         if 'Weapon Attack' in dragger.token.action_list and field.squares[row][col].token.weapon.range <= 1:
                                                             action = ActionDatabase['Weapon Attack'].create(field.squares[row][col].token, 'reaction')
-                                                            action.set_target(dragger.token)
+                                                            action.set_target(dragger.token, initial, field.squares[row][col])
                                                             if action.is_available(field.squares[row][col].token, 'reaction'): 
                                                                 game.gamelog.new_line('Opportunity Attack!')
                                                                 action.do(game)                                                            

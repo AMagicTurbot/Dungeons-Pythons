@@ -9,6 +9,8 @@ class Weapon:
         self.DamageDice = DamageDice
         self.DamageType = DamageType
         self.attributes = attributes
+        self.atkmodifier = 0
+        self.dmgmodifier = 0
         
 
 
@@ -20,4 +22,10 @@ Shortsword = Weapon('Shortsword',
 Shortbow = Weapon('Shortbow', 
                     'Simple', 20//UNITLENGHT, 
                     D6, 'piercing', 
+                    ['ammunition'])
+
+
+Crossbow = Weapon('Crossbow', 
+                    'Martial', 20//UNITLENGHT, 
+                    D8, 'piercing', 
                     ['ammunition'])
