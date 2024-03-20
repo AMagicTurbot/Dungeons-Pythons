@@ -22,7 +22,10 @@ class Square:
             return False
 
     def has_ally(self, team):
-        return self.is_occupied() and self.token.team == team
+        if isinstance(self.token, Creature):
+            return self.is_occupied() and self.token.team == team
+        else:
+            return False
 
     def distance(self, starting_square):
         col_dist = abs(self.row - starting_square.row)

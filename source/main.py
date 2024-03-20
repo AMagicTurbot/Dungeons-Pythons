@@ -86,13 +86,29 @@ class Main:
                         if game.show_actions == 'Actions':          
                             for action in game.active_player.ActiveTurnActions:
                                 if action.button.clicked(event):
-                                    action.button.on_click(game)
+                                    if action.requires_target():
+                                        for row in range(ROWS):
+                                            for col in range(COLS):
+                                                if field.squares[row][col].token == action.token:
+                                                    token_square = field.squares[row][col]
+                                        dragger.save_initial(token_square)
+                                        dragger.drag_target(action)
+                                    else:
+                                        action.button.on_click(game)
                                     self.show_all(screen, game, buttons)
                                     break
                         elif game.show_actions == 'Bonus Actions':          
                             for action in game.active_player.ActiveTurnBonusActions:
                                 if action.button.clicked(event):
-                                    action.button.on_click(game)
+                                    if action.requires_target():
+                                        for row in range(ROWS):
+                                            for col in range(COLS):
+                                                if field.squares[row][col].token == action.token:
+                                                    token_square = field.squares[row][col]
+                                        dragger.save_initial(token_square)
+                                        dragger.drag_target(action)
+                                    else:
+                                        action.button.on_click(game)
                                     self.show_all(screen, game, buttons)
                                     break
                         
@@ -122,27 +138,39 @@ class Main:
                         dragger.update_mouse(event.pos)
                         released_row = dragger.mouseY//SQSIZE
                         releades_col = dragger.mouseX//SQSIZE
-                        #Check if possible move is valid
-                        initial = Square(dragger.initial_row, dragger.initial_col)
-                        final = Square(released_row, releades_col)
-                        move = Move(initial, final)
-                        if field.valid_move(dragger.token, move):
-                            #Move token
-                            movedistance = field.move(dragger.token, move)
-                            gamelog.new_line(str(dragger.token.name) + ' moves by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
-                            #Check for opportunity attacks
-                            if not dragger.token.freemoving:
-                                for row in [dragger.initial_row-1, dragger.initial_row, dragger.initial_row+1]:
-                                    for col in [dragger.initial_col-1, dragger.initial_col, dragger.initial_col+1]:
-                                        if Square.on_field(row, col):
-                                            if field.squares[row][col].has_enemy(dragger.token.team):
-                                                if field.squares[row][col].distance(final)>1:
-                                                    if 'Weapon Attack' in dragger.token.action_list and field.squares[row][col].token.weapon.range <= 1:
-                                                        action = ActionDatabase['Weapon Attack'].create(field.squares[row][col].token, 'reaction', dragger.token)
-                                                        if action.is_available(field.squares[row][col].token, 'reaction'): 
-                                                            game.gamelog.new_line('Opportunity Attack!')
-                                                            action.do(game)                                                            
-                            self.show_all(screen, game, buttons)
+                        if dragger.targetting:
+                            if released_row < ROWS and releades_col < COLS:
+                                initial = field.squares[dragger.initial_row][dragger.initial_col]
+                                final = field.squares[released_row][releades_col]
+                                #Check if action target is valid
+                                if dragger.action.is_valid_target(initial, final, dragger.action.token):
+                                    dragger.action.set_target(final.token, final, initial)
+                                    dragger.action.do(game)
+                                    self.show_all(screen, game, buttons)
+                        else:
+                            initial = Square(dragger.initial_row, dragger.initial_col)
+                            final = Square(released_row, releades_col)
+                            move = Move(initial, final)
+                            #Check if possible move is valid
+                            if field.valid_move(dragger.token, move):
+                                #Move token
+                                movedistance = field.move(dragger.token, move)
+                                gamelog.new_line(str(dragger.token.name) + ' moves by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
+                                #Check for opportunity attacks
+                                if not dragger.token.freemoving:
+                                    for row in [dragger.initial_row-1, dragger.initial_row, dragger.initial_row+1]:
+                                        for col in [dragger.initial_col-1, dragger.initial_col, dragger.initial_col+1]:
+                                            if Square.on_field(row, col):
+                                                if field.squares[row][col].has_enemy(dragger.token.team):
+                                                    #Only melee weapons can make AoO
+                                                    if field.squares[row][col].distance(final)>1:
+                                                        if 'Weapon Attack' in dragger.token.action_list and field.squares[row][col].token.weapon.range <= 1:
+                                                            action = ActionDatabase['Weapon Attack'].create(field.squares[row][col].token, 'reaction')
+                                                            action.set_target(dragger.token, initial, field.squares[row][col])
+                                                            if action.is_available(field.squares[row][col].token, 'reaction'): 
+                                                                game.gamelog.new_line('Opportunity Attack!')
+                                                                action.do(game)                                                            
+                                self.show_all(screen, game, buttons)
                         dragger.release_token()
 
                 #Quit event

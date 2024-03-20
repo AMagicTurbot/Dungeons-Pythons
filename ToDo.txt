@@ -1,4 +1,13 @@
 
-Implement Critical hits
+Complete Erundor: 
+DONE:Firebolt, 
+DONE:Contraption actions, 
+DONE:Cure Wounds 
+DONE:and Magic Missiles (4 slots), 
+DONE:Misty step (1 slot)
+
+Cover system
+
+Rework movement to account for pathing (attacks of opportunity and walls)
 
 add a cleanup step ('del ...') before re-instanciating (' = ') objects to optimize memory

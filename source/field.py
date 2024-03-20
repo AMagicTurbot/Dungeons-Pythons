@@ -89,9 +89,11 @@ class Field:
         for token in init.players:
             self.playable_tokens.append(token[0])
             self.squares[token[1]][token[2]] = Square(token[1],token[2], token[0])
+            token[0].team = 'players'
         for token in init.enemies:
             self.playable_tokens.append(token[0])
             self.squares[token[1]][token[2]] = Square(token[1],token[2], token[0])
+            token[0].team = 'enemies'
         for token in init.objects:
             self.squares[token[1]][token[2]] = Square(token[1],token[2], token[0])
         for token in self.playable_tokens:
