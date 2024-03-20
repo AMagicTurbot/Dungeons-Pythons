@@ -1,10 +1,7 @@
 
-Complete Erundor: 
-DONE:Firebolt, 
-DONE:Contraption actions, 
-DONE:Cure Wounds 
-DONE:and Magic Missiles (4 slots), 
-DONE:Misty step (1 slot)
+IA self play: 
+-Rework Game to operate on a step-based logic through a game.advance(action) method
+-Incorporate Main in Game as a game.render() method
 
 Cover system
 
