@@ -38,7 +38,7 @@ class Field:
             distance = move.lenght()
         return distance
     
-    def move(self, token, move):
+    def move(self, token, move, game):
         initial = move.initial
         final = move.final
         #Update squares list with new token position
@@ -48,6 +48,22 @@ class Field:
         movedistance = self.movement_distance(token, move)
         token.current_movement -= movedistance
         token.clear_moves()
+
+        #Check for opportunity attacks
+        if not token.freemoving:
+            for row in [initial.row-1, initial.row, initial.row+1]:
+                for col in [initial.col-1, initial.col, initial.col+1]:
+                    if Square.on_field(row, col):
+                        if self.squares[row][col].has_enemy(token.team) and self.squares[row][col].distance(final)>1:
+                            enemy_token = self.squares[row][col].token
+                            #Only melee weapons can make AoO
+                            if 'Weapon Attack' in enemy_token.action_list and enemy_token.weapon.range <= 1: 
+                                action = ActionDatabase['Weapon Attack'].create(enemy_token, 'reaction')
+                                action.set_target(token, initial, self.squares[row][col])
+                                if action.is_available(enemy_token, 'reaction'): 
+                                    game.gamelog.new_line('Opportunity Attack!')
+                                    action.do(game)        
+
         return movedistance
 
     def valid_move(self, token, move):

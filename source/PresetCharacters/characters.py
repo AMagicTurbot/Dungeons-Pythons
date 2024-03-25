@@ -35,8 +35,7 @@ class Erundor(Creature):
         self.ArmorClass = 17
 
         #Actions
-        self.action_list = ['Pass',
-                            'Dodge',
+        self.action_list = ['Dodge',
                             'Disengage',
                             'Weapon Attack',
                             'Firebolt',
@@ -46,7 +45,7 @@ class Erundor(Creature):
 
         self.bonus_action_list = ['Triangulate Target',
                                   'Dash',
-                                  'Misty Step',
+                                  #'Misty Step',
                                   'Propulsion Blast']
 
         #Spellcasting

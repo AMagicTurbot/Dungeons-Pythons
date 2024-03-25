@@ -127,8 +127,7 @@ class Antonio(Creature):
         self.ArmorClass = 15
 
         #Actions
-        self.action_list = ['Pass',
-                            'Dash',
+        self.action_list = ['Dash',
                             'Dodge',
                             'Disengage',
                             'Weapon Attack']
@@ -155,8 +154,7 @@ class Kenku(Creature):
         self.weapon = Shortbow
         self.ArmorClass = 13
         #Actions
-        self.action_list = ['Pass',
-                            'Dash',
+        self.action_list = ['Dash',
                             'Dodge',
                             'Disengage',
                             'Weapon Attack']

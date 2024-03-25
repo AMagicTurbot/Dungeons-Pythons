@@ -7,8 +7,8 @@ from init import Init
 from field import Field
 from dragger import Dragger
 from gamelog import Gamelog
-from actions import ActionDatabase
-from buttons import Actionbutton
+from actions import *
+from buttons import Buttons, Actionbutton
 
 
 class Game:
@@ -17,11 +17,69 @@ class Game:
         self.field = Field()
         self.dragger = Dragger()
         self.gamelog = Gamelog()
+        self.buttons = Buttons()
 
         self.initiative_order = []
         self.active_player = self.field.playable_tokens[0]
         self.show_actions = None
 
+        self.game_ended = False
+
+    #Gamestate methods
+    def take_action(self, action):
+        action.do(self)
+
+    def get_agent_actions(self):
+        #Array structure: [0-7: move UL, U0, UR, 0R, DR, D0, DL, 0L
+        #                   8-...: actions
+        #                   -1: pass]
+        available_actions = []
+        #Movement actions
+        for row in range(ROWS):
+            for col in range(COLS):
+                if self.field.squares[row][col].token == self.active_player:
+                    active_player_square = self.field.squares[row][col]
+                    active_player_row = row
+                    active_player_col = col
+        available_actions.append(Movement(active_player_square, (-1,-1)).create(self.active_player, None))
+        available_actions.append(Movement(active_player_square, (-1, 0)).create(self.active_player, None))
+        available_actions.append(Movement(active_player_square, (-1, 1)).create(self.active_player, None))
+        available_actions.append(Movement(active_player_square, ( 0,+1)).create(self.active_player, None))
+        available_actions.append(Movement(active_player_square, (+1,+1)).create(self.active_player, None))
+        available_actions.append(Movement(active_player_square, (+1, 0)).create(self.active_player, None))
+        available_actions.append(Movement(active_player_square, (+1,-1)).create(self.active_player, None))
+        available_actions.append(Movement(active_player_square, ( 0,-1)).create(self.active_player, None))
+        #Consider token Actions list
+        for action_name in self.active_player.action_list:                      
+            possible_action = ActionDatabase[action_name]                       
+            if possible_action.is_available(self.active_player, 'action'):          #Check if action is available 
+                action = possible_action.create(self.active_player,'action')        #Create action by binding token and cost   
+                if action.requires_target(): 
+                    targets = action.get_available_targets(self.active_player, self.field)   
+                    if len(targets)>0:
+                        for target in targets:
+                            available_actions.append(action.create(self.active_player,'action'))     
+                            available_actions[-1].set_target(target.token, target, active_player_square)                  
+                else: 
+                    available_actions.append(action)
+        #Consider token Bonus Actions
+        for action_name in self.active_player.bonus_action_list:                
+            possible_action = ActionDatabase[action_name]
+            if possible_action.is_available(self.active_player, 'bonus action'):    #Check if action is available 
+                action = possible_action.create(self.active_player,'bonus action')  #Create action by binding token and cost
+                if action.requires_target(): 
+                    targets = action.get_available_targets(self.active_player, self.field)   
+                    if len(targets)>0:
+                        for target in targets:
+                            available_actions.append(action.create(self.active_player,'bonus action'))    
+                            available_actions[-1].set_target(target.token, target, active_player_square)                    
+                else: 
+                    available_actions.append(action)     
+        #Pass action  
+        available_actions.append(Pass().create(self.active_player,None))   
+        return available_actions
+
+    #Blit methods
     def show_all(self, surface):
         self.show_field(surface)
         self.show_interface(surface)
@@ -61,7 +119,6 @@ class Game:
                             pygame.draw.rect(surface, LOGBKGNDCOLOR, EmpyRect)
                             pygame.draw.rect(surface, ONColor, HPRect)
                         
-
     def show_moves(self, surface):
         if self.dragger.dragging and self.dragger.token.can_move:
             token = self.dragger.token
@@ -81,9 +138,7 @@ class Game:
                 TargetImg = Target()
                 img = pygame.image.load(TargetImg.texture)
                 img_center = ((square.col+0.5)*SQSIZE, (square.row+0.5)*SQSIZE)
-                surface.blit(img, img.get_rect(center=img_center))
-                
-                
+                surface.blit(img, img.get_rect(center=img_center))            
 
     def show_interface(self, surface):
         #Active player
@@ -94,10 +149,8 @@ class Game:
         MovementText = self.gamelog.font.render('Movement: ' + str(self.active_player.current_movement*UNITLENGHT) + ' ' + LENGHTNAME, True, self.gamelog.textcolor)
         surface.blit(MovementText, (self.gamelog.x, 30))
         #Action
-        
         AColor = ONColor if self.active_player.has_action() else OFFColor
         AText = self.gamelog.font.render('Action', True, (50, 50, 50))
-        
         surface.blit(AText, (WIDTH+LOGWIDTH//8+(LOGWIDTH//3-AText.get_width())/2, 60))
         #Bonus Actions
         ARect = pygame.Rect((WIDTH + LOGWIDTH*7//12, 50), (LOGWIDTH//3, 30))
@@ -145,12 +198,12 @@ class Game:
         self.active_player=self.initiative_order[0]
         self.active_player.turn_start()
 
-    def print_initiative(self):
+        #Gamelog initiative
         initiative = 'Initiative: '
         for token in self.initiative_order:
             initiative += str(token) + ' ,'
-        return initiative
-        
+        self.gamelog.new_line(initiative)
+           
     def get_available_actions(self):
         #Consider token Actions list
         self.active_player.ActiveTurnActions = []
@@ -171,8 +224,8 @@ class Game:
                 if action.requires_target(): 
                     action.get_available_targets(self.active_player, self.field)   
                     if len(action.available_targets)>0: self.active_player.ActiveTurnBonusActions.append(action)                        
-                else: self.active_player.ActiveTurnBonusActions.append(action)                                   
-
+                else: self.active_player.ActiveTurnBonusActions.append(action)    
+        self.active_player.ActiveTurnActions.append(Pass().create(self.active_player,None))                               
 
     def next_turn(self):
         #End-Turn events 

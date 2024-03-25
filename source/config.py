@@ -28,5 +28,6 @@ EnemiesCOLOR = (200, 160, 150)
 
 #Config
 MEMORYDIAG = False
+PRINTDICE = False
 
 

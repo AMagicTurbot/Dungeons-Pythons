@@ -1,10 +1,14 @@
 
 IA self play: 
--Rework Game to operate on a step-based logic through a game.advance(action) method
--Incorporate Main in Game as a game.render() method
+-DONE: Rework Game to operate on a step-based logic through a game.advance(action) method
+-POSTPONED: Incorporate Main in Game as a game.render() method
 
+
+
+
+
+FUTURE:
 Cover system
 
 Rework movement to account for pathing (attacks of opportunity and walls)
 
-add a cleanup step ('del ...') before re-instanciating (' = ') objects to optimize memory

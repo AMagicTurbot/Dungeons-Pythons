@@ -153,6 +153,25 @@ class Disengage(Action):
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
 
+class Movement(Action):
+    def __init__(self, initial, direction):
+        self.direction = direction
+        self.initial_square = initial
+        name = 'Move ' + str(direction[0]) + ' ,' + str(direction[1])
+        super().__init__(name)
+
+    def do(self, game):
+        row = self.initial_square.row
+        col = self.initial_square.col
+        final_row = row+self.direction[0]
+        final_col = col+self.direction[1]
+        game.field.get_moves(game.active_player, row, col)
+        for move in game.active_player.moves:
+            if move.final.row == final_row and move.final.col == final_col:
+                game.field.move(game.active_player, move, game)
+
+
+
 #Attack Actions
 #Attacks require a TARGET, which is found by scanning squares within a certain RANGE for enemy tokens
 class Attack(Action):
@@ -337,12 +356,12 @@ class PropulsionBlast(Attack):
         final_square = game.field.squares[min(final_row, ROWS-1)][min(final_col, COLS-1)]
         if not final_square.is_occupied():
             moveSelf = Move(self.token_square, final_square)
-            game.field.move(self.token, moveSelf)
+            game.field.move(self.token, moveSelf, game)
         else:
-            final_square = game.field.squares[self.token_square.row-1*direction[1]][self.token_square.col-1*direction[0]]
+            final_square = game.field.squares[min(self.token_square.row-1*direction[1], ROWS-1)][min(self.token_square.col-1*direction[0], COLS-1)]
             if not final_square.is_occupied():
                 moveSelf = Move(self.token_square, final_square)
-                game.field.move(self.token, moveSelf)
+                game.field.move(self.token, moveSelf, game)
             else:
                 pass
         self.token.current_movement = movement
@@ -357,22 +376,22 @@ class PropulsionBlast(Attack):
             final_square = game.field.squares[min(final_row, ROWS-1)][min(final_col, COLS-1)]
             if not final_square.is_occupied():
                 moveTarget = Move(self.target_square, final_square)
-                game.field.move(self.target, moveTarget)
+                game.field.move(self.target, moveTarget, game)
             else:
-                final_square = game.field.squares[self.target_square.row+3*direction[1]][self.target_square.col+3*direction[0]]
+                final_square = game.field.squares[min(self.target_square.row+3*direction[1], ROWS-1)][min(self.target_square.col+3*direction[0], COLS-1)]
                 if not final_square.is_occupied():
                     moveTarget = Move(self.target_square, final_square)
-                    game.field.move(self.target, moveTarget)
+                    game.field.move(self.target, moveTarget, game)
                 else: 
-                    final_square = game.field.squares[self.target_square.row+2*direction[1]][self.target_square.col+2*direction[0]]
+                    final_square = game.field.squares[min(self.target_square.row+2*direction[1], ROWS-1)][min(self.target_square.col+2*direction[0], COLS-1)]
                     if not final_square.is_occupied():
                         moveTarget = Move(self.target_square, final_square)
-                        game.field.move(self.target, moveTarget)
+                        game.field.move(self.target, moveTarget, game)
                     else:
-                        final_square = game.field.squares[self.target_square.row+1*direction[1]][self.target_square.col+1*direction[0]]
+                        final_square = game.field.squares[min(self.target_square.row+1*direction[1], ROWS-1)][min(self.target_square.col+1*direction[0], COLS-1)]
                         if not final_square.is_occupied():
                             moveTarget = Move(self.target_square, final_square)
-                            game.field.move(self.target, moveTarget)
+                            game.field.move(self.target, moveTarget, game)
                         else:
                             pass
             self.target.current_movement = movement
@@ -523,7 +542,7 @@ class CureWounds(Spell):
             for square in rows:
                 if self.is_valid_target(initial_square, square, square.token): 
                     if initial_square.distance(square)<=self.range:
-                        self.available_targets.append(square)
+                        if square not in self.available_targets: self.available_targets.append(square)
         return self.available_targets
     
     def is_valid_target(self, initial_square, final_square, token):
@@ -660,7 +679,7 @@ class MistyStep(Spell):
     def do(self, game):
         DontUseMovement = int(self.token.current_movement)
         move = Move(self.token_square, self.target_square)
-        game.field.move(self.token, move)
+        game.field.move(self.token, move, game)
         self.token.current_movement = DontUseMovement
         game.gamelog.new_line(self.token.name + ' casts Misty Step')
         if self.cost == 'action': 
