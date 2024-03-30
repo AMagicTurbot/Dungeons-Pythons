@@ -3,7 +3,7 @@ import sys
 import tracemalloc
 import time
 
-from agent import Agent
+from agent import *
 from config import *
 from tokens import *
 from game import Game
@@ -13,7 +13,6 @@ from buttons import Buttons, Actionbutton
 
 
 class Main:
-
     def __init__(self):
         global screen
         #Pygame inizialization
@@ -24,6 +23,22 @@ class Main:
 
         self.enemies_win = 0
         self.players_win = 0
+
+    def plot(scores, mean_scores):
+        display.clear_output(wait=True)
+        display.display(plt.gcf())
+        plt.clf()
+        plt.title('Training...')
+        plt.xlabel('Number of Games')
+        plt.ylabel('Score')
+        plt.plot(scores)
+        plt.plot(mean_scores)
+        plt.ylim(ymin=0)
+        plt.text(len(scores)-1, scores[-1], str(scores[-1]))
+        plt.text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
+        plt.show(block=False)
+        plt.pause(.1)
+
 
     def start_game(self):
         global game, field, dragger, gamelog, buttons, screen
@@ -66,18 +81,22 @@ class Main:
 
         while not game.game_ended:
             game.get_available_actions()
-
             self.update_screen(screen, game, buttons)
 
             #AI choice
-            if game.active_player.team == 'enemies' or game.active_player.team == 'players':
-                choice = Agent.decision(game.get_agent_actions(), game)
-                choice.do(game)
-                # time.sleep(0.01)
+            if game.active_player.team == 'enemies':
+                choice = RandomAgent.decision(game.get_agent_actions(), game)
+                game.take_action(choice)
+                time.sleep(1/game.AISpeed)
+            if game.active_player.team == 'players':
+                choice = RandomAgent.decision(game.get_agent_actions(), game)
+                game.take_action(choice)
+                time.sleep(1/game.AISpeed)
 
             if dragger.dragging:
                 dragger.update_blit(screen)
-                
+            
+            #User activity
             for event in pygame.event.get():
                 #Mouse click
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -192,22 +211,21 @@ class Main:
                                 game.initiative_order.remove(token)
                                 field.squares[row][col].token = tombstone(token.name)
 
-            if all(token.team == game.initiative_order[0].team for token in game.initiative_order):
-                if game.initiative_order[0].team == 'enemies':
-                    self.enemies_win +=1
-                    print('Enemies wins: ' + str(self.enemies_win))
-                elif game.initiative_order[0].team == 'players':
-                    self.players_win +=1
-                    print('Players wins: ' + str(self.players_win))
-                self.start_game()
-                # game.game_ended = True
+                                #Game end
+                                if all(token.team == game.initiative_order[0].team for token in game.initiative_order):
+                                    if game.initiative_order[0].team == 'enemies':
+                                        self.enemies_win +=1
+                                        print('Enemies wins: ' + str(self.enemies_win))
+                                    elif game.initiative_order[0].team == 'players':
+                                        self.players_win +=1
+                                        print('Players wins: ' + str(self.players_win))
+                                    self.start_game()
+                                    # game.game_ended = True
                 
 
 
             pygame.display.update()
             if MEMORYDIAG: print(tracemalloc.get_traced_memory())
-
-            
 
             
 main = Main()

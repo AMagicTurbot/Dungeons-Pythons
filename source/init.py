@@ -7,13 +7,13 @@ class Init:
             [Erundor(), 6, 5]       #Token and starting position in row, col
             ] 
         self.enemies = [
-            [Erundor(name='AI'), 3, 3],
-            [Kenku(name='Kenku 1'), 4, 3], 
-            [Kenku(name='Kenku 2'), 4, 4] 
+            [Erundor(name='AI'), 3, 3]
+            # [Kenku(name='Kenku 1'), 4, 3], 
+            # [Kenku(name='Kenku 2'), 4, 4] 
         ]
         self.objects = [
             [stones(), 2, 2] 
         ]
 
 
-        self.enemies[1][0].weapon = Shortsword
+        # self.enemies[1][0].weapon = Shortsword

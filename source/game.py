@@ -22,12 +22,47 @@ class Game:
         self.initiative_order = []
         self.active_player = self.field.playable_tokens[0]
         self.show_actions = None
+        self.turns = 0
 
         self.game_ended = False
+        self.AISpeed = AISPEED
 
     #Gamestate methods
     def take_action(self, action):
+        if action.requires_target():
+            saved_target_hp = action.target.Hp
         action.do(self)
+        reward = 0
+        score = 0
+
+        #Kill token
+        for token in self.initiative_order:
+            if token.Hp<=0:
+                if token == self.active_player:
+                    self.next_turn()
+                self.initiative_order.remove(token)
+        #End game
+        if len(self.initiative_order)==1:
+            if self.initiative_order[0].team  == 'enemies':
+                print('Enemies win!')
+                score = (50-self.turns)
+            elif self.initiative_order[0].team == 'players':
+                print('Players win!')
+                score = -(50-self.turns)
+            self.game_ended = True
+
+        #Reward system: +2 for attacking,  +5 for hitting, -2 for passing, +10 for killing
+        if isinstance(action, Attack) or isinstance(action, MagicMissiles):
+            reward +=2
+        if isinstance(action, Pass):
+            reward-=2
+        if action.requires_target():
+            if action.target.Hp < saved_target_hp and action.target.team!=self.active_player.team:
+                reward+=5
+            if action.target.Hp <= 0:
+                reward+=10
+
+        return reward, self.game_ended, score
 
     def get_agent_actions(self):
         #Array structure: [0-7: move UL, U0, UR, 0R, DR, D0, DL, 0L
@@ -238,6 +273,7 @@ class Game:
             self.active_player = self.initiative_order[index+1]
         else:
             self.active_player = self.initiative_order[0]
+            self.turns += 1
         #Reset token turn variables
         self.active_player.turn_start()
         #Start-Turn events 
