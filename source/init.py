@@ -4,11 +4,11 @@ from PresetCharacters.characters import *
 class Init:
     def __init__(self):
         self.players = [
-            [Erundor(), 6, 5]       #Token and starting position in row, col
+            [Kenku(name='Kenku'), 4, 4]       #Token and starting position in row, col
             ] 
         self.enemies = [
-            [Erundor(name='AI'), 3, 3]
-            # [Kenku(name='Kenku 1'), 4, 3], 
+            # [Erundor(name='AI'), 3, 3]
+            [Kenku(name='Kenku AI'), 4, 3], 
             # [Kenku(name='Kenku 2'), 4, 4] 
         ]
         self.objects = [
@@ -16,4 +16,4 @@ class Init:
         ]
 
 
-        # self.enemies[1][0].weapon = Shortsword
+        self.players[0][0].weapon = Shortsword

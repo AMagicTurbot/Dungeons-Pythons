@@ -23,6 +23,7 @@ class Main:
 
         self.enemies_win = 0
         self.players_win = 0
+        self.AI = AIAgent()
 
     def plot(scores, mean_scores):
         display.clear_output(wait=True)
@@ -85,13 +86,13 @@ class Main:
 
             #AI choice
             if game.active_player.team == 'enemies':
-                choice = RandomAgent.decision(game.get_agent_actions(), game)
+                choice = self.AI.decision(game.get_agent_actions(), game)
                 game.take_action(choice)
                 time.sleep(1/game.AISpeed)
-            if game.active_player.team == 'players':
-                choice = RandomAgent.decision(game.get_agent_actions(), game)
-                game.take_action(choice)
-                time.sleep(1/game.AISpeed)
+            # if game.active_player.team == 'players':
+            #     choice = RandomAgent.decision(game.get_agent_actions(), game)
+            #     game.take_action(choice)
+            #     time.sleep(1/game.AISpeed)
 
             if dragger.dragging:
                 dragger.update_blit(screen)

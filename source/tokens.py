@@ -144,10 +144,10 @@ class Kenku(Creature):
         #Characteristics
         self.str = 14
         self.str_bonus = Creature._bonus(self.str)
-        self.dex = 16
+        self.dex = 18
         self.dex_bonus = Creature._bonus(self.dex)
         #Status
-        self.MaxHp = 5
+        self.MaxHp = 26
         self.Hp = self.MaxHp
         #Equipment
         self.proficiencies = ['Shortbow', 'Shortsword']

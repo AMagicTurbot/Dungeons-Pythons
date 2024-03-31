@@ -123,6 +123,11 @@ class AIAgent(Agent):
 
         return action_index
 
+    def decision(self, available_actions, game):
+        state_old = self.get_state(game)
+        final_move_index = self.get_action(game, state_old)
+        return available_actions[final_move_index]
+
 
 class Main():
     def __init__(self):
@@ -179,7 +184,6 @@ class Main():
         agent = AIAgent()
         player_agent = RandomAgent()
 
-        print('Training Initialized')
         while True:
             game.get_available_actions()
             self.update_screen(screen, game, buttons)
