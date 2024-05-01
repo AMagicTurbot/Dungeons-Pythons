@@ -3,7 +3,6 @@ import pygame
 from config import *
 from dice import *
 from tokens import Creature, Target
-from init import Init
 from field import Field
 from dragger import Dragger
 from gamelog import Gamelog
@@ -24,95 +23,66 @@ class Game:
         self.show_actions = None
         self.turns = 0
 
+        #AI variables
         self.game_ended = False
         self.AISpeed = AISPEED
+        self.PreviousTurnHP = self.active_player.Hp
 
     #Gamestate methods
-    def take_action(self, action):
-        if action.requires_target():
-            saved_target_hp = action.target.Hp
-        action.do(self)
+    def take_action(self, moveset, valid):
         reward = 0
         score = 0
 
-        #Kill token
-        for token in self.initiative_order:
-            if token.Hp<=0:
-                if token == self.active_player:
-                    self.next_turn()
-                self.initiative_order.remove(token)
+        if not valid: #reward -10 if moveset is invalid
+            return -10, self.game_ended, score
+
+        for action in moveset:
+            if action.requires_target():
+                saved_target_hp = action.target.Hp
+
+            if isinstance(action, Movement):
+                for row in self.field.squares:
+                    for square in row:
+                        if square.token == self.active_player:
+                            initial_player_square = square
+                        if square.has_enemy(self.active_player.team):
+                            enemy_square = square
+
+            action.do(self)
+
+            #Rewards   
+            # if self.PreviousTurnHP>self.active_player.Hp:   #-4 for being hit
+            #     reward-= 4  
+            # self.PreviousTurnHP=self.active_player.Hp
+            if isinstance(action, Attack) or isinstance(action, MagicMissiles): # +3 for attacking, to be removed
+                reward += 5
+            if action.requires_target(): 
+                if action.target.Hp < saved_target_hp and action.target.team!=self.active_player.team: # +4 for hitting
+                    reward+= 8
+                if action.target.Hp <= 0: # +10 for killing
+                    reward+= 15
+            if isinstance(action, Movement): # +3 for getting closer
+                for row in self.field.squares:
+                    for square in row:
+                        if square.token == self.active_player:
+                            player_square = square
+                if player_square.distance(enemy_square) < initial_player_square.distance(enemy_square) and initial_player_square.distance(enemy_square)>self.active_player.weapon.range:
+                    reward += 5
+    
+        reward -= self.turns
+        
         #End game
         if len(self.initiative_order)==1:
             if self.initiative_order[0].team  == 'enemies':
                 print('Enemies win!')
-                score = (50-self.turns)
+                score = 100-self.turns
             elif self.initiative_order[0].team == 'players':
                 print('Players win!')
-                score = -(50-self.turns)
+                score = self.turns
             self.game_ended = True
 
-        #Reward system: +2 for attacking,  +5 for hitting, -2 for passing, +10 for killing
-        if isinstance(action, Attack) or isinstance(action, MagicMissiles):
-            reward +=2
-        if isinstance(action, Pass):
-            reward-=2
-        if action.requires_target():
-            if action.target.Hp < saved_target_hp and action.target.team!=self.active_player.team:
-                reward+=5
-            if action.target.Hp <= 0:
-                reward+=10
-
+        score += reward
         return reward, self.game_ended, score
-
-    def get_agent_actions(self):
-        #Array structure: [0-7: move UL, U0, UR, 0R, DR, D0, DL, 0L
-        #                   8-...: actions
-        #                   -1: pass]
-        available_actions = []
-        #Movement actions
-        for row in range(ROWS):
-            for col in range(COLS):
-                if self.field.squares[row][col].token == self.active_player:
-                    active_player_square = self.field.squares[row][col]
-                    active_player_row = row
-                    active_player_col = col
-        available_actions.append(Movement(active_player_square, (-1,-1)).create(self.active_player, None))
-        available_actions.append(Movement(active_player_square, (-1, 0)).create(self.active_player, None))
-        available_actions.append(Movement(active_player_square, (-1, 1)).create(self.active_player, None))
-        available_actions.append(Movement(active_player_square, ( 0,+1)).create(self.active_player, None))
-        available_actions.append(Movement(active_player_square, (+1,+1)).create(self.active_player, None))
-        available_actions.append(Movement(active_player_square, (+1, 0)).create(self.active_player, None))
-        available_actions.append(Movement(active_player_square, (+1,-1)).create(self.active_player, None))
-        available_actions.append(Movement(active_player_square, ( 0,-1)).create(self.active_player, None))
-        #Consider token Actions list
-        for action_name in self.active_player.action_list:                      
-            possible_action = ActionDatabase[action_name]                       
-            if possible_action.is_available(self.active_player, 'action'):          #Check if action is available 
-                action = possible_action.create(self.active_player,'action')        #Create action by binding token and cost   
-                if action.requires_target(): 
-                    targets = action.get_available_targets(self.active_player, self.field)   
-                    if len(targets)>0:
-                        for target in targets:
-                            available_actions.append(action.create(self.active_player,'action'))     
-                            available_actions[-1].set_target(target.token, target, active_player_square)                  
-                else: 
-                    available_actions.append(action)
-        #Consider token Bonus Actions
-        for action_name in self.active_player.bonus_action_list:                
-            possible_action = ActionDatabase[action_name]
-            if possible_action.is_available(self.active_player, 'bonus action'):    #Check if action is available 
-                action = possible_action.create(self.active_player,'bonus action')  #Create action by binding token and cost
-                if action.requires_target(): 
-                    targets = action.get_available_targets(self.active_player, self.field)   
-                    if len(targets)>0:
-                        for target in targets:
-                            available_actions.append(action.create(self.active_player,'bonus action'))    
-                            available_actions[-1].set_target(target.token, target, active_player_square)                    
-                else: 
-                    available_actions.append(action)     
-        #Pass action  
-        available_actions.append(Pass().create(self.active_player,None))   
-        return available_actions
 
     #Blit methods
     def show_all(self, surface):
@@ -248,7 +218,8 @@ class Game:
                 action = possible_action.create(self.active_player,'action')        #Create action by binding token and cost   
                 if action.requires_target(): 
                     action.get_available_targets(self.active_player, self.field)   
-                    if len(action.available_targets)>0: self.active_player.ActiveTurnActions.append(action)                        
+                    if len(action.available_targets)>0: 
+                        self.active_player.ActiveTurnActions.append(action)                        
                 else: self.active_player.ActiveTurnActions.append(action)
         #Consider token Bonus Actions
         self.active_player.ActiveTurnBonusActions = []
@@ -260,7 +231,8 @@ class Game:
                     action.get_available_targets(self.active_player, self.field)   
                     if len(action.available_targets)>0: self.active_player.ActiveTurnBonusActions.append(action)                        
                 else: self.active_player.ActiveTurnBonusActions.append(action)    
-        self.active_player.ActiveTurnActions.append(Pass().create(self.active_player,None))                               
+        self.active_player.ActiveTurnActions.append(Pass().create(self.active_player,None))          
+
 
     def next_turn(self):
         #End-Turn events 

@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import os
+from config import *
 
 
 class Linear_QNet(nn.Module):
@@ -17,7 +18,7 @@ class Linear_QNet(nn.Module):
         return x
 
     def save(self, file_name='model.pth'):
-        model_folder_path = './source/AI'
+        model_folder_path = AIPATH
         if not os.path.exists(model_folder_path):
             os.makedirs(model_folder_path)
 

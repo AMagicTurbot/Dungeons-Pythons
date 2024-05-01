@@ -11,7 +11,6 @@ from square import Square
 from move import Move
 from buttons import Buttons, Actionbutton
 
-
 class Main:
     def __init__(self):
         global screen
@@ -86,13 +85,10 @@ class Main:
 
             #AI choice
             if game.active_player.team == 'enemies':
-                choice = self.AI.decision(game.get_agent_actions(), game)
-                game.take_action(choice)
-                time.sleep(1/game.AISpeed)
-            # if game.active_player.team == 'players':
-            #     choice = RandomAgent.decision(game.get_agent_actions(), game)
-            #     game.take_action(choice)
-            #     time.sleep(1/game.AISpeed)
+                state_old = self.AI.get_state(game)
+                final_move = self.AI.get_move(state_old)
+                moveset, valid = self.AI.get_moveset(final_move, game)
+                game.take_action(moveset, valid)
 
             if dragger.dragging:
                 dragger.update_blit(screen)

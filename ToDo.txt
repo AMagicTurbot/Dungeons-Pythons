@@ -1,29 +1,12 @@
-
 IA self play: 
--POSTPONED: Incorporate Main in Game as a game.render() method
--Make a agent.get_state(self) method and define a "gamestate" that the NN will use as input for the model.predict(gamestate) method
-    gamestate = enviroment
-    num available actions
-    life %
-    movement %
-    has action
-    has bonus action
-    distance from enemy
-    x direction to enemy
-    y direction to enemy
-    enemy life %
-    enemy is dodging
--Implement in game.take_action(action) a "reward" and a "game_ended" output variables
-    reward = + or - reward depending on the outcome of action taken, in particular
-    +2 for attacking
-    +5 for hitting
-    -2 for passing
-    +10 for killing
--Fix code by evaluating action_index instead of action until take_action(action_index)
+-DONE: Create movesets in agent (for a simple Kenku AI):
+    disengage and move
+    defend
+    move and attack
+    magic missle
+-DONE: Minor expansion to agent.get_state
+-DONE: Rework game.take_action to consider movesets and give negative reward for illegal choice
 
 
-FUTURE:
-Cover system
 
-Rework movement to account for pathing (attacks of opportunity and walls)
 

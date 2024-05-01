@@ -20,7 +20,7 @@ class Gamelog:
         self.fontsize = int(0.4*self.height/self.max_lenght)
         self.font = pygame.font.SysFont(LOGFONT, self.fontsize)
         self.textcolor = (0, 0, 0)
-        self.maxchar = int(self.width/self.fontsize*2.3)
+        self.maxchar = int(self.width/self.fontsize*2.2)
         self.linedim = (0.9*self.width, self.height/self.max_lenght)  #Required to divide text over two lines
         self.linepos = [(1.005*self.x, (1.01*self.y+l*self.height/self.max_lenght)) for l in range(self.max_lenght)]
         

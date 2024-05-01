@@ -139,15 +139,17 @@ class Kenku(Creature):
         spritename='Kenku'
         super().__init__(spritename, team)
         self.name=name
-        self.speed = 10 // UNITLENGHT
+        self.speed = 20 // UNITLENGHT
         self.proficiency = 3
         #Characteristics
         self.str = 14
         self.str_bonus = Creature._bonus(self.str)
         self.dex = 18
         self.dex_bonus = Creature._bonus(self.dex)
+        self.int = 14
+        self.int_bonus = Creature._bonus(self.dex)
         #Status
-        self.MaxHp = 26
+        self.MaxHp = 32
         self.Hp = self.MaxHp
         #Equipment
         self.proficiencies = ['Shortbow', 'Shortsword']
@@ -157,7 +159,13 @@ class Kenku(Creature):
         self.action_list = ['Dash',
                             'Dodge',
                             'Disengage',
-                            'Weapon Attack']
+                            'Weapon Attack',
+                            'Magic Missiles']
+
+        #Spellcasting
+        self.spellslots = [99, 4]
+        self.spellcasting_bonus = self.int_bonus
+        self.spell_DC = 8 + self.spellcasting_bonus + self.proficiency
 
 
 

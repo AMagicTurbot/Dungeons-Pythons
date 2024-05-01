@@ -11,6 +11,7 @@ from IPython import display
 
 from config import *
 from tokens import *
+from actions import *
 from game import Game
 from square import Square
 from move import Move
@@ -39,31 +40,117 @@ class Agent():
     def train_short_memory(self):
         pass
 
-    def decision(available_actions, game):
+    def moveset(available_actions, game):
         pass
-
-    def random_decision(available_actions, game):
-        if game.active_player.current_movement < 1:
-            action = available_actions[random.randint(8, len(available_actions)-1)]
-        else:
-            action = available_actions[random.randint(0, len(available_actions)-1)]
-        return action
 
 class RandomAgent(Agent):
     def __init__(self):
         super().__init__()
 
-    def decision(available_actions, game):
-        return Agent.random_decision(available_actions, game)
+    def get_state(self, game):
+        player = game.active_player
+        for row in game.field.squares:
+            for square in row:
+                if square.token == player:
+                    player_square = square
+                if square.has_enemy(player.team):
+                    enemy = square.token
+                    enemy_square = square
+        state = [
+            #Self status
+            player.Hp//player.MaxHp,                        #0
+            player_square.row,                              #1
+            player_square.col,                              #2
+            player.current_movement//player.speed,          #3
+            int(player.has_action()),                       #4
+            int(player.has_bonus_action()),                 #5
+            #Enemy status   
+            enemy_square.distance(player_square),           #6
+            enemy_square.row,                               #7
+            enemy_square.col,                               #8
+            enemy.Hp//enemy.MaxHp,                          #9
+            int(enemy.is_dodging)                           #10
+        ]
+        return np.array(state)
+
+    def get_move(self, state):
+        final_move = [0,0,0]
+        move = random.randint(0,1)
+        final_move[move]=1
+
+        return final_move
+
+    def get_moveset(self, final_move, game):
+        #This method converts the logic AI choice (final_move) into a series of moves to be performed by game.take_action
+        state_old = self.get_state(game)
+        
+        game.get_available_actions()
+        token = game.active_player
+        token_row = state_old[1]
+        token_col = state_old[2]
+        enemy_row = state_old[7]
+        enemy_col = state_old[8]
+        token_square = game.field.squares[token_row][token_col]
+        enemy_square = game.field.squares[enemy_row][enemy_col]
+        enemy = enemy_square.token
+        
+        moveset=[]
+        valid = False
+
+        if final_move[0] == 1:
+            #Get in attack range and attack
+            if state_old[6]>token.weapon.range:
+                game.field.get_moves(token, token_row, token_col)
+                distance_from_enemy = []
+                for move in token.moves:
+                    distance_from_enemy.append(np.square(enemy_row-move.final.row)+np.square(enemy_col-move.final.col))
+                move = token.moves[np.argmin(distance_from_enemy)]
+                moveset.append(Movement(token_square, (move.final.row-token_row, move.final.col-token_col)).create(token, None))
+
+                token_square = game.field.squares[move.final.row][move.final.col]
+                token_row = token_square.row
+                token_col = token_square.col
+            
+            attack = WeaponAttack().create(token, 'Action')
+            if token_square.distance(enemy_square)<=token.weapon.range:
+                attack.set_target(enemy, enemy_square, token_square)
+                moveset.append(attack)
+            valid = True
+            
+        elif final_move[1]== 1:
+            #Dodge
+            for action in token.ActiveTurnActions:
+                if action.name == 'Dodge':
+                    moveset.append(action)
+                    valid = True
+            
+        elif final_move[2]== 1:
+            #Disengage and move away
+            for action in token.ActiveTurnActions:
+                if action.name == 'Disengage':
+                    moveset.append(action)
+                    valid = True
+            for i in range(max([token_row, token_col])):
+                    row_move = np.copysign(1, -(enemy_row-token_row))
+                    col_move = np.copysign(1, -(enemy_col-token_col))
+                    moveset.append(Movement(token_square, (row_move, col_move)).create(token, None))
+
+        moveset.append(Pass().create(token,None))
+        return moveset, valid
+
 
 class AIAgent(Agent):
     def __init__(self):
         super().__init__()
         self.n_games = 0
-        self.epsilon = 0    #Randomness
-        self.gamma = 0.9      #Discount Rate, <1
+        self.epsilon0 = 0                      # Randomness
+        self.gamma = 0.9                      # Discount Rate, <1
         self.memory = deque(maxlen=MAX_MEMORY)  #If we exceed MAX_MEMORY it will popleft() it, deleting old data
-        self.model = Linear_QNet(10, 256, 1)
+        self.model = Linear_QNet(11, 256, 2)
+        #Load trained AI
+        if os.path.exists(os.path.join(AIPATH, 'model.pth')) and LOAD_AI:
+            self.model.load_state_dict(torch.load(os.path.join(AIPATH, 'model.pth')))
+            self.model.eval()
         self.trainer = QTrainer(self.model, lr=LR, gamma=self.gamma)
 
     def get_state(self, game):
@@ -76,19 +163,19 @@ class AIAgent(Agent):
                     enemy = square.token
                     enemy_square = square
         state = [
-            #Num of available actions
-            len(game.get_agent_actions()),
             #Self status
-            player.Hp//player.MaxHp,
-            player.current_movement//player.speed,
-            int(player.has_action()),
-            int(player.has_bonus_action()),
-            #Enemy status
-            enemy_square.distance(player_square),
-            enemy_square.row - player_square.row,
-            enemy_square.col - player_square.col,
-            enemy.Hp//enemy.MaxHp,
-            int(enemy.is_dodging)
+            player.Hp//player.MaxHp,                        #0
+            player_square.row,                              #1
+            player_square.col,                              #2
+            player.current_movement//player.speed,          #3
+            int(player.has_action()),                       #4
+            int(player.has_bonus_action()),                 #5
+            #Enemy status   
+            enemy_square.distance(player_square),           #6
+            enemy_square.row,                               #7
+            enemy_square.col,                               #8
+            enemy.Hp//enemy.MaxHp,                          #9
+            int(enemy.is_dodging)                           #10
         ]
         return np.array(state)
 
@@ -107,26 +194,87 @@ class AIAgent(Agent):
     def train_short_memory(self, state, action, reward, next_state, game_ended):
         self.trainer.train_step(state, action, reward, next_state, game_ended)
 
-    def get_action(self, game, state):
-        available_actions = game.get_agent_actions()
-
-        self.epsilon = 80 - self.n_games #Sets tradeoff exploration/exploitation; Vary 80 dep on how many games you want to train for
+    def get_move(self, state):
+        self.epsilon = self.epsilon0 - self.n_games #Sets tradeoff exploration/exploitation; Vary 80 dep on how many games you want to train for
+        final_move = [0,0]
         if random.randint(0, 200)<self.epsilon: #Lower epsilon => less randomness
-            if game.active_player.current_movement < 1:
-                action_index = random.randint(8, len(available_actions)-1)
-            else:
-                action_index = random.randint(0, len(available_actions)-1)
+            move = random.randint(0,1)
+            final_move[move]=1
         else:
             state0 = torch.tensor(state, dtype=torch.float)
             prediction = self.model(state0)
-            action_index = int(prediction.item())
+            move = torch.argmax(prediction).item()
+            final_move[move]=1
 
-        return action_index
+        return final_move
 
-    def decision(self, available_actions, game):
+    def get_moveset(self, final_move, game):
+        #This method converts the logic AI choice (final_move) into a series of moves to be performed by game.take_action
         state_old = self.get_state(game)
-        final_move_index = self.get_action(game, state_old)
-        return available_actions[final_move_index]
+
+        game.get_available_actions()
+        token = game.active_player
+        token_row = state_old[1]
+        token_col = state_old[2]
+        enemy_row = state_old[7]
+        enemy_col = state_old[8]
+        token_square = game.field.squares[token_row][token_col]
+        enemy_square = game.field.squares[enemy_row][enemy_col]
+        enemy = enemy_square.token
+        
+        moveset=[]
+        valid = False
+
+        if final_move[0] == 1:
+            #Get in attack range and attack
+            if state_old[6]>token.weapon.range:
+                game.field.get_moves(token, token_row, token_col)
+                distance_from_enemy = []
+                for move in token.moves:
+                    distance_from_enemy.append(np.square(enemy_row-move.final.row)+np.square(enemy_col-move.final.col))
+                move = token.moves[np.argmin(distance_from_enemy)]
+                moveset.append(Movement(token_square, (move.final.row-token_row, move.final.col-token_col)).create(token, None))
+
+                token_square = game.field.squares[move.final.row][move.final.col]
+                token_row = token_square.row
+                token_col = token_square.col
+            
+            attack = WeaponAttack().create(token, 'Action')
+            if token_square.distance(enemy_square)<=token.weapon.range:
+                attack.set_target(enemy, enemy_square, token_square)
+                moveset.append(attack)
+            valid = True
+
+        # elif final_move[1]== 1:
+        #     #Magic Missiles
+        #     for action in token.ActiveTurnActions:
+        #         if action.name == 'Magic Missiles':
+        #             action.set_target(enemy, enemy_square, token_square)
+        #             moveset.append(action)
+        #             valid = True
+            
+        # elif final_move[2]== 1:
+        #     #Dodge
+        #     for action in token.ActiveTurnActions:
+        #         if action.name == 'Dodge':
+        #             moveset.append(action)
+        #             valid = True
+            
+        elif final_move[1]== 1:
+            #Disengage and move away
+            for action in token.ActiveTurnActions:
+                if action.name == 'Disengage':
+                    moveset.append(action)
+                    valid = True
+            for i in range(max([token_row, token_col])):
+                    row_move = np.copysign(1, -(enemy_row-token_row))
+                    col_move = np.copysign(1, -(enemy_col-token_col))
+                    moveset.append(Movement(token_square, (row_move, col_move)).create(token, None))
+
+        moveset.append(Pass().create(token,None))
+        return moveset, valid
+
+        return moveset
 
 
 class Main():
@@ -138,18 +286,20 @@ class Main():
         screen = self.screen
         pygame.display.set_caption('Dungeons&Pythons')
 
-    def plot(scores, mean_scores):
+    def plot(scores, mean_scores, rewards):
         display.clear_output(wait=True)
         display.display(plt.gcf())
         plt.clf()
         plt.title('Training...')
         plt.xlabel('Number of Games')
         plt.ylabel('Score')
-        plt.plot(scores)
-        plt.plot(mean_scores)
+        plt.plot(scores, label = 'score')
+        plt.plot(mean_scores, label = 'mean score')
+        plt.plot(rewards, label = 'rewards')
         plt.ylim(ymin=-50)
         plt.text(len(scores)-1, scores[-1], str(scores[-1]))
         plt.text(len(mean_scores)-1, mean_scores[-1], str(mean_scores[-1]))
+        plt.legend()
         plt.show(block=False)
         plt.pause(.1)
 
@@ -179,31 +329,36 @@ class Main():
 
         plot_scores = []
         plot_mean_scores = []
+        plot_reward = []
+        reward_log = []
         total_score = 0
         record = 0
         agent = AIAgent()
         player_agent = RandomAgent()
 
         while True:
-            game.get_available_actions()
             self.update_screen(screen, game, buttons)
 
             #AI choice (note that AI controls "enemies")
             if game.active_player.team == 'players':
-                choice = RandomAgent.decision(game.get_agent_actions(), game)
-                reward, game_ended, score = game.take_action(choice)
+                state_old = player_agent.get_state(game)
+                final_move = player_agent.get_move(state_old)
+                moveset, valid = player_agent.get_moveset(final_move, game)
+                reward, game_ended, score = game.take_action(moveset, valid)
 
             if game.active_player.team == 'enemies':
-                available_actions = game.get_agent_actions()
                 #Get old state
                 state_old = agent.get_state(game)
 
                 #Get available actions
-                final_move = agent.get_action(game, state_old)
+                final_move = agent.get_move(state_old)
 
                 #Choose and perform an action
-                reward, game_ended, score = game.take_action(available_actions[final_move])
+                moveset, valid = agent.get_moveset(final_move, game)
+                reward, game_ended, score = game.take_action(moveset, valid)
                 state_new = agent.get_state(game)
+
+                reward_log.append(reward)
 
                 #Train short memory (1 step)
                 agent.train_short_memory(state_old, final_move, reward, state_new, game_ended)
@@ -211,6 +366,11 @@ class Main():
                 #Store training data
                 agent.remember(state_old, final_move, reward, state_new, game_ended)
             
+            for token in game.initiative_order:
+                if token.Hp<=0:
+                    if token == game.active_player:
+                        game.next_turn()
+                    game.initiative_order.remove(token)
             pygame.display.update()
 
             if game.game_ended:
@@ -224,12 +384,15 @@ class Main():
 
                 #Plot results
                 print('Game', agent.n_games, 'Score', score, 'Record:', record)
+                print(reward_log)
                 plot_scores.append(score)
+                plot_reward.append(np.mean(reward_log))
                 total_score += score
                 mean_score = total_score / agent.n_games
                 plot_mean_scores.append(mean_score)
-                Main.plot(plot_scores, plot_mean_scores)
+                Main.plot(plot_scores, plot_mean_scores, plot_reward)
 
+                reward_log = []
                 self.start_game()
 
 if __name__ == '__main__':
