@@ -6,8 +6,8 @@ class Erundor(Creature):
         spritename='Erundor'
         super().__init__(spritename, team)
         self.name=name
-        self.speed = 15 // UNITLENGHT
-        self.level = 6
+        self.speed = 30 // UNITLENGHT
+        self.level = 7
         self.proficiency = 3
 
         #Characteristics
@@ -25,14 +25,14 @@ class Erundor(Creature):
         self.cha_bonus = Creature._bonus(self.dex)
 
         #Status
-        self.MaxHp = 43
+        self.MaxHp = 51
         self.Hp = self.MaxHp
 
         #Equipment
-        self.proficiencies = ['Crossbow']
-        self.weapon = Crossbow
-        self.InfusedCrossbow()
-        self.ArmorClass = 17
+        self.proficiencies = ['Spell Gun']
+        self.weapon = SpellGun
+        # self.InfusedCrossbow()
+        self.ArmorClass = 19
 
         #Actions
         self.action_list = ['Dodge',
@@ -45,7 +45,7 @@ class Erundor(Creature):
 
         self.bonus_action_list = ['Triangulate Target',
                                   'Dash',
-                                  #'Misty Step',
+                                  'Misty Step',
                                   'Propulsion Blast']
 
         #Spellcasting
@@ -58,3 +58,37 @@ class Erundor(Creature):
         self.weapon.name = 'Infused Crossbow'
         self.weapon.atkmodifier = 1
         self.weapon.dmgmodifier = 1
+
+
+class Bugbear(Creature):
+    def __init__(self, name='Goblin', team='enemies'):
+        spritename='Goblin'
+        super().__init__(spritename, team)
+        self.name=name
+        self.speed = 30 // UNITLENGHT
+        self.proficiency = 3
+        #Characteristics
+        self.str = 16
+        self.str_bonus = Creature._bonus(self.str)
+        self.dex = 14
+        self.dex_bonus = Creature._bonus(self.dex)
+        self.cos = 13
+        self.cos_bonus = Creature._bonus(self.dex)
+        self.int = 8
+        self.int_bonus = Creature._bonus(self.dex)
+        self.wis = 11
+        self.wis_bonus = Creature._bonus(self.dex)
+        self.cha = 9
+        self.cha_bonus = Creature._bonus(self.dex)
+        #Status
+        self.MaxHp = 27
+        self.Hp = self.MaxHp
+        #Equipment
+        self.proficiencies = ['Morning Star', 'Javelin']
+        self.weapon = Morning_Star
+        self.ArmorClass = 16
+        #Actions
+        self.action_list = ['Dash',
+                            'Dodge',
+                            'Disengage',
+                            'Bugbear Weapon Attack']

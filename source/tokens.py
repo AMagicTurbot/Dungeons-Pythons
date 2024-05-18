@@ -159,8 +159,7 @@ class Kenku(Creature):
         self.action_list = ['Dash',
                             'Dodge',
                             'Disengage',
-                            'Weapon Attack',
-                            'Magic Missiles']
+                            'Weapon Attack']
 
         #Spellcasting
         self.spellslots = [99, 4]

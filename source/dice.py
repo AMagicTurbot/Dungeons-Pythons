@@ -4,8 +4,9 @@ import numpy as np
 from config import *
 
 class Dice:
-    def __init__(self, faces):
+    def __init__(self, faces, number=1):
         self.faces = faces
+        self.number = number
 
     def roll_dice(self, number):
         if number == 1:
@@ -20,6 +21,7 @@ class Dice:
             return sum(rolls)
 
     def roll(self, num=1, advantage=False, disadvantage=False):
+        num = num*self.number
         if advantage and disadvantage or not advantage and not disadvantage:
             return self.roll_dice(num)
         elif advantage:
@@ -41,3 +43,4 @@ D10 = Dice(10)
 D8 = Dice(8)
 D6 = Dice(6)
 D4 = Dice(4)
+D6x3 = Dice(6, number=3)

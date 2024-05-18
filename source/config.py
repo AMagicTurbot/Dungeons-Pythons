@@ -28,9 +28,9 @@ EnemiesCOLOR = (200, 160, 150)
 
 #Config
 MEMORYDIAG = False
-PRINTDICE = False
+PRINTDICE = True
 LOAD_AI = True
 AIPATH = './source/AI'
-AISPEED = 20
+AIDELAY = 0
 
 

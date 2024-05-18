@@ -168,7 +168,8 @@ class Movement(Action):
         game.field.get_moves(game.active_player, row, col)
         for move in game.active_player.moves:
             if move.final.row == final_row and move.final.col == final_col:
-                game.field.move(game.active_player, move, game)
+                movedistance = game.field.move(game.active_player, move, game)
+                game.gamelog.new_line(game.active_player.name + ' moves by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
 
 
 
@@ -278,7 +279,7 @@ class WeaponAttack(Attack):
             AtkMod = 0
             DmgMod = 0
         AttackRoll = self.attack(modifier= AtkMod)
-        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name)
+        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name + ' with ' + str(self.token.weapon.name))
         if AttackRoll >= self.target.ArmorClass:
             DamageRoll = self.damage(modifier= DmgMod)
             if self.is_critical: 
@@ -403,7 +404,48 @@ class PropulsionBlast(Attack):
         elif self.cost == 'bonus action': self.token.use_bonus_action()
         elif self.cost == 'reaction': self.token.use_reaction()
 
-
+class BugbearWeaponAttack(WeaponAttack):
+    def damage(self, turn, modifier = 0):
+        roll = self.token.weapon.DamageDice.roll() 
+        if self.token.weapon.range <= 1:
+            roll += self.token.weapon.DamageDice.roll()
+        if turn == 0:
+            roll += D6.roll()
+        if self.is_critical: 
+            roll += self.token.weapon.DamageDice.roll()
+            if self.token.weapon.range <= 1:
+                roll += self.token.weapon.DamageDice.roll()
+            if turn == 0:
+                roll += D6.roll()
+        if self.token.weapon.range > 1  or 'finesse' in self.token.weapon.attributes:
+            roll += self.token.dex_bonus
+        else:
+            roll += self.token.str_bonus
+        roll += self.token.weapon.dmgmodifier + modifier
+        return roll 
+    
+    def do(self, game):
+        if self.target.is_triangulated[0]: 
+            AtkMod = self.target.is_triangulated[1]
+            DmgMod = self.target.is_triangulated[2]
+        else: 
+            AtkMod = 0
+            DmgMod = 0
+        AttackRoll = self.attack(modifier= AtkMod)
+        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name + ' with ' + str(self.token.weapon.name))
+        if AttackRoll >= self.target.ArmorClass:
+            DamageRoll = self.damage(turn = game.turns, modifier= DmgMod)
+            if self.is_critical: 
+                if self.target.is_triangulated[0]: DamageRoll += D6.roll_dice(2)
+                game.gamelog.new_line(str(AttackRoll) + ' to hit: Critical hit! '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            else: game.gamelog.new_line(str(AttackRoll) + ' to hit: Hits for '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            self.target.Hp -= DamageRoll
+        else: 
+            game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': self.token.use_bonus_action()
+        elif self.cost == 'reaction': self.token.use_reaction()
+    
 #Spells 
 class Spell(Action):
     def __init__(self, name):
@@ -754,6 +796,7 @@ ActionDatabase = {  'Pass': Pass(),
                     'Dodge': Dodge(),
                     'Disengage': Disengage(),
                     'Weapon Attack': WeaponAttack(),
+                    'Bugbear Weapon Attack': BugbearWeaponAttack(),
                     'Firebolt': Firebolt(),
                     'Cure Wounds': CureWounds(),
                     'Triangulate Target': TriangulateTarget(),

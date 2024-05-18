@@ -153,7 +153,7 @@ class Diagnostic(Button):
         super().__init__('DiagnosticButton')
         self.fontsize = 20
         self.font = pygame.font.SysFont(LOGFONT, self.fontsize)
-        self.content = 'Slow Down'
+        self.content = 'Empty'
         self.width = 0.65*self.fontsize*len(self.content)
         self.height = self.fontsize*1.3
         self.x = position[0]
@@ -165,10 +165,12 @@ class Diagnostic(Button):
 
 
     def on_click(self, game):
-        if game.AISpeed == 1:
-            game.AISpeed = 100
-        else:
-            game.AISpeed = game.AISpeed*0.1
+        print('nothing to see here...')
+        pass
+        # if game.AIDelay != 0:
+        #     game.AIDelay = 0
+        # else:
+        #     game.AIDelay = AIDELAY
         
 
         

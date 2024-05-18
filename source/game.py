@@ -12,8 +12,9 @@ from buttons import Buttons, Actionbutton
 
 class Game:
 
-    def __init__(self):
-        self.field = Field()
+    def __init__(self, level):
+        self.level = level
+        self.field = Field(self.level)
         self.dragger = Dragger()
         self.gamelog = Gamelog()
         self.buttons = Buttons()
@@ -25,7 +26,7 @@ class Game:
 
         #AI variables
         self.game_ended = False
-        self.AISpeed = AISPEED
+        self.AIDelay = AIDELAY
         self.PreviousTurnHP = self.active_player.Hp
 
     #Gamestate methods
@@ -51,25 +52,27 @@ class Game:
             action.do(self)
 
             #Rewards   
-            # if self.PreviousTurnHP>self.active_player.Hp:   #-4 for being hit
-            #     reward-= 4  
-            # self.PreviousTurnHP=self.active_player.Hp
-            if isinstance(action, Attack) or isinstance(action, MagicMissiles): # +3 for attacking, to be removed
-                reward += 5
+            if isinstance(action, Attack) or isinstance(action, MagicMissiles): # +6 for attacking, to be removed
+                reward += 6
             if action.requires_target(): 
-                if action.target.Hp < saved_target_hp and action.target.team!=self.active_player.team: # +4 for hitting
-                    reward+= 8
+                if action.target.Hp < saved_target_hp and action.target.team!=self.active_player.team: # +9 for hitting
+                    reward+= 9
                 if action.target.Hp <= 0: # +10 for killing
                     reward+= 15
-            if isinstance(action, Movement): # +3 for getting closer
-                for row in self.field.squares:
-                    for square in row:
-                        if square.token == self.active_player:
-                            player_square = square
-                if player_square.distance(enemy_square) < initial_player_square.distance(enemy_square) and initial_player_square.distance(enemy_square)>self.active_player.weapon.range:
-                    reward += 5
-    
-        reward -= self.turns
+        if self.active_player.weapon.name == 'Morning Star':
+            reward += 3
+            # if isinstance(action, Movement) and self.active_player.weapon.range<2: # +3 for getting closer
+            #     for row in self.field.squares:
+            #         for square in row:
+            #             if square.token == self.active_player:
+            #                 player_square = square
+            #     if player_square.distance(enemy_square) < initial_player_square.distance(enemy_square) and initial_player_square.distance(enemy_square)>self.active_player.weapon.range:
+            #         reward += 5
+
+        time.sleep(self.AIDelay)
+        if reward == 0 or reward == 3:
+            reward = -10
+        # reward -= self.turns//2
         
         #End game
         if len(self.initiative_order)==1:
@@ -78,10 +81,10 @@ class Game:
                 score = 100-self.turns
             elif self.initiative_order[0].team == 'players':
                 print('Players win!')
-                score = self.turns
+                score = 0
             self.game_ended = True
 
-        score += reward
+        # print('AI reward: ' + str(reward))
         return reward, self.game_ended, score
 
     #Blit methods
@@ -146,6 +149,9 @@ class Game:
                 surface.blit(img, img.get_rect(center=img_center))            
 
     def show_interface(self, surface):
+        #Current level
+        CurrentLevelText = self.gamelog.font.render('Currently on Level ' + str(self.level), True, self.gamelog.textcolor)
+        surface.blit(CurrentLevelText, (self.gamelog.x, self.gamelog.y*0.95))
         #Active player
         ActivePlayerColor = PlayersCOLOR if self.active_player.team == 'players' else EnemiesCOLOR
         ActivePlayerText = self.gamelog.font.render('Current player: ' + str(self.active_player), True, ActivePlayerColor)
@@ -153,7 +159,7 @@ class Game:
         #Movement
         MovementText = self.gamelog.font.render('Movement: ' + str(self.active_player.current_movement*UNITLENGHT) + ' ' + LENGHTNAME, True, self.gamelog.textcolor)
         surface.blit(MovementText, (self.gamelog.x, 30))
-        #Action
+        #Actions
         AColor = ONColor if self.active_player.has_action() else OFFColor
         AText = self.gamelog.font.render('Action', True, (50, 50, 50))
         surface.blit(AText, (WIDTH+LOGWIDTH//8+(LOGWIDTH//3-AText.get_width())/2, 60))

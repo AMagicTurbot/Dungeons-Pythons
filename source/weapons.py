@@ -11,6 +11,12 @@ class Weapon:
         self.attributes = attributes
         self.atkmodifier = 0
         self.dmgmodifier = 0
+
+    def __eq__(self, other):
+        if other == None:
+            return False
+        else:
+            return self.name == other.name
         
 
 
@@ -20,7 +26,7 @@ Shortsword = Weapon('Shortsword',
                     ['finesse', 'light'])
 
 Shortbow = Weapon('Shortbow', 
-                    'Simple', 20//UNITLENGHT, 
+                    'Simple', 30//UNITLENGHT, 
                     D6, 'piercing', 
                     ['ammunition'])
 
@@ -28,4 +34,19 @@ Shortbow = Weapon('Shortbow',
 Crossbow = Weapon('Crossbow', 
                     'Martial', 20//UNITLENGHT, 
                     D8, 'piercing', 
+                    ['ammunition'])
+
+Morning_Star = Weapon('Morning Star', 
+                    'Martial', 5//UNITLENGHT, 
+                    D8, 'piercing', 
+                    ['light'])
+
+Javelin = Weapon('Javelin', 
+                    'Simple', 30//UNITLENGHT, 
+                    D6, 'piercing', 
+                    ['ammunition'])
+                
+SpellGun = Weapon('Spell Gun', 
+                    'Martial', 30//UNITLENGHT, 
+                    D6x3, 'fire', 
                     ['ammunition'])

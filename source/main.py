@@ -3,7 +3,7 @@ import sys
 import tracemalloc
 import time
 
-from agent import *
+from AI.agent import *
 from config import *
 from tokens import *
 from game import Game
@@ -20,9 +20,10 @@ class Main:
         screen = self.screen
         pygame.display.set_caption('Dungeons&Pythons')
 
+        self.level = 1
         self.enemies_win = 0
         self.players_win = 0
-        self.AI = AIAgent()
+        self.AI = BugbearAIAgent()
 
     def plot(scores, mean_scores):
         display.clear_output(wait=True)
@@ -39,10 +40,9 @@ class Main:
         plt.show(block=False)
         plt.pause(.1)
 
-
     def start_game(self):
         global game, field, dragger, gamelog, buttons, screen
-        self.game = Game()
+        self.game = Game(level=self.level)
         game = self.game
         field = game.field
         dragger = game.dragger
@@ -184,7 +184,20 @@ class Main:
                                 #Move token
                                 movedistance = field.move(dragger.token, move, game)
                                 gamelog.new_line(str(dragger.token.name) + ' moves by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
-                                                    
+                                #Check for opportunity attacks
+                                if not dragger.token.freemoving:
+                                    for row in [dragger.initial_row-1, dragger.initial_row, dragger.initial_row+1]:
+                                        for col in [dragger.initial_col-1, dragger.initial_col, dragger.initial_col+1]:
+                                            if Square.on_field(row, col):
+                                                if field.squares[row][col].has_enemy(dragger.token.team):
+                                                    #Only melee weapons can make AoO
+                                                    if field.squares[row][col].distance(final)>1:
+                                                        if 'Weapon Attack' in dragger.token.action_list and field.squares[row][col].token.weapon.range <= 1:
+                                                            action = ActionDatabase['Weapon Attack'].create(field.squares[row][col].token, 'reaction')
+                                                            action.set_target(dragger.token, initial, field.squares[row][col])
+                                                            if action.is_available(field.squares[row][col].token, 'reaction'): 
+                                                                game.gamelog.new_line('Opportunity Attack!')
+                                                                action.do(game)
                                 self.update_screen(screen, game, buttons)
                         dragger.release_token()
 
@@ -213,12 +226,16 @@ class Main:
                                     if game.initiative_order[0].team == 'enemies':
                                         self.enemies_win +=1
                                         print('Enemies wins: ' + str(self.enemies_win))
+                                        self.start_game()
                                     elif game.initiative_order[0].team == 'players':
                                         self.players_win +=1
                                         print('Players wins: ' + str(self.players_win))
-                                    self.start_game()
-                                    # game.game_ended = True
-                
+                                        if self.level < 3:
+                                            self.level += 1
+                                            self.start_game()
+                                        else:
+                                            game.gamelog.new_line('YOU SURVIVED THE TUTORIAL. GOOD GAME!')
+                                    
 
 
             pygame.display.update()

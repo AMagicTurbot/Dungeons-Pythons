@@ -8,11 +8,19 @@ from move import Move
 
 class Field:
 
-    def __init__(self):
+    def __init__(self, level):
         self.squares = list([0 for col in range(COLS)] for row in range(ROWS))
         self._create()
         self.playable_tokens = []
-        self._init_tokens()
+        if level == 0:
+            init_config = Init_AI()
+        if level == 1:
+            init_config = Init_LV1()
+        elif level == 2:
+            init_config = Init_LV2()
+        elif level == 3:
+            init_config = Init_LV3()
+        self._init_tokens(init_config)
     
 
     def movement_distance(self, token, move, calculating=False):
@@ -100,8 +108,8 @@ class Field:
             for col in range(COLS):
                 self.squares[row][col] = Square(row, col)
 
-    def _init_tokens(self):
-        init = Init()
+    def _init_tokens(self, init_config):
+        init = init_config
         for token in init.players:
             self.playable_tokens.append(token[0])
             self.squares[token[1]][token[2]] = Square(token[1],token[2], token[0])
