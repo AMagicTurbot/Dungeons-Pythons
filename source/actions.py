@@ -153,6 +153,94 @@ class Disengage(Action):
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
 
+class MonkDash(Dash):
+    def is_available(self, token, cost):
+        if cost == 'action':
+            return token.has_action()
+        elif cost == 'bonus action':
+            return token.has_bonus_action() and token.ki_points>0
+        elif cost == 'reaction':
+            return token.has_reaction()
+        elif cost == None:
+            return True
+    
+    def create(self, token, cost):
+        del self
+        new_instance = MonkDash()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
+    def do(self, game):
+        #Instructions
+        self.token.current_movement += self.token.speed
+        #Log
+        game.gamelog.new_line(self.token.name + ' dashes.')
+        #Cost
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': 
+            self.token.use_bonus_action()
+            self.token.ki_points -= 1
+
+class MonkDodge(Dodge):
+    def is_available(self, token, cost):
+        if cost == 'action':
+            return token.has_action()
+        elif cost == 'bonus action':
+            return token.has_bonus_action() and token.ki_points>0
+        elif cost == 'reaction':
+            return token.has_reaction()
+        elif cost == None:
+            return True
+
+    def create(self, token, cost):
+        del self
+        new_instance = MonkDodge()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+    
+    def do(self, game):
+        #Instructions
+        self.token.is_dodging = True
+        #Log
+        game.gamelog.new_line(self.token.name + ' dodges.')
+        #Cost
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': 
+            self.token.use_bonus_action()
+            self.token.ki_points -= 1
+
+class MonkDisengage(Disengage):
+    def is_available(self, token, cost):
+        if cost == 'action':
+            return token.has_action()
+        elif cost == 'bonus action':
+            return token.has_bonus_action() and token.ki_points>0
+        elif cost == 'reaction':
+            return token.has_reaction()
+        elif cost == None:
+            return True
+
+    def create(self, token, cost):
+        del self
+        new_instance = MonkDisengage()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
+    def do(self, game):
+        #Instructions
+        self.token.freemoving = True
+        self.token.EndTurnActions.append(EndDisengage(self.token))
+        #Log
+        game.gamelog.new_line(self.token.name + ' disengages.')
+        #Cost
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': 
+            self.token.use_bonus_action()
+            self.token.ki_points -= 1
+
 class Movement(Action):
     def __init__(self, initial, direction):
         self.direction = direction
@@ -962,6 +1050,9 @@ ActionDatabase = {  'Pass': Pass(),
                     'Dash': Dash(),
                     'Dodge': Dodge(),
                     'Disengage': Disengage(),
+                    'Monk Dash': MonkDash(),
+                    'Monk Dodge': MonkDodge(),
+                    'Monk Disengage': MonkDisengage(),
                     'Weapon Attack': WeaponAttack(),
                     'Bugbear Weapon Attack': BugbearWeaponAttack(),
                     'Firebolt': Firebolt(),

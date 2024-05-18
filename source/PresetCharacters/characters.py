@@ -136,17 +136,17 @@ class Aegis(Creature):
         self.has_used_Hands_of_Healing = False
         self.action_list = ['Monk Weapon Attack', 
                             'Hands of Harm',        
-                            'Dodge',
-                            'Dash',
-                            'Disengage'                            
+                            'Monk Dodge',
+                            'Monk Dash',
+                            'Monk Disengage'                            
                             ]
 
         self.bonus_action_list = ['Monk Weapon Attack',
                                 'Hands of Healing',        
                                 'Hands of Harm',
-                                'Dodge',
-                                'Dash',
-                                'Disengage'
+                                'Monk Dodge',
+                                'Monk Dash',
+                                'Monk Disengage'
                                 ]     
 
         #Ki abilities

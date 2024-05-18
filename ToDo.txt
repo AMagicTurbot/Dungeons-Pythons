@@ -8,6 +8,6 @@ IA self play:
 -DONE: Rework game.take_action to consider movesets and give negative reward for illegal choice
 
 
-DONE: Finire scheda Erundor
-Fare Aegis
+Aegis dash/dodge/dis to use ki on bonus action
+Aegis moveset and training rewards
 
