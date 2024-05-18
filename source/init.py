@@ -62,10 +62,11 @@ class Init_LV3:
             [Erundor(), row1, col1]      #Token and starting position in row, col
             ] 
         self.enemies = [
-            [Kenku(name='Kenku AI'), row2, col2], 
+            [Aegis(name='Aegis AI'), row2, col2], 
         ]
         self.objects = [
             [stones(), row3, col3],
             [stones(), row4, col4],
-            [stones(), row5, col5]
+            [corpse(), row5, col5],
+            [corpse(), row6, col6]
         ]

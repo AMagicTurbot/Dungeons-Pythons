@@ -405,6 +405,10 @@ class PropulsionBlast(Attack):
         elif self.cost == 'reaction': self.token.use_reaction()
 
 class BugbearWeaponAttack(WeaponAttack):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Bugbear Weapon Attack'
+
     def damage(self, turn, modifier = 0):
         roll = self.token.weapon.DamageDice.roll() 
         if self.token.weapon.range <= 1:
@@ -445,7 +449,170 @@ class BugbearWeaponAttack(WeaponAttack):
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
         elif self.cost == 'reaction': self.token.use_reaction()
-    
+
+class MonkWeaponAttack(WeaponAttack):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Monk Weapon Attack'
+
+    def create(self, token, cost):
+        del self
+        new_instance = MonkWeaponAttack()
+        new_instance.token = token
+        new_instance.range = new_instance.token.weapon.range
+        new_instance.proficient = bool(token.weapon.name in token.proficiencies)
+        new_instance.cost = cost
+        return new_instance
+
+    def is_available(self, token, cost):
+        if cost == 'action':
+            return token.has_action() and token.attacks_during_action<token.max_attacks
+        elif cost == 'bonus action':
+            if token.attacks_during_bonus_action > 0:
+                return token.has_bonus_action() and token.attacks_during_action>0 and token.ki_points>=1
+            else:
+                return token.has_bonus_action() and token.attacks_during_action>0
+        elif cost == 'reaction':
+            return token.has_reaction()
+        elif cost == None:
+            return True
+
+    def do(self, game):
+        if self.target.is_triangulated[0]: 
+            AtkMod = self.target.is_triangulated[1]
+            DmgMod = self.target.is_triangulated[2]
+        else: 
+            AtkMod = 0
+            DmgMod = 0
+        AttackRoll = self.attack(modifier= AtkMod)
+        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name + ' with its fists')
+        if AttackRoll >= self.target.ArmorClass:
+            DamageRoll = self.damage(modifier= DmgMod)
+            if self.is_critical: 
+                if self.target.is_triangulated[0]: DamageRoll += D6.roll_dice(2)
+                game.gamelog.new_line(str(AttackRoll) + ' to hit: Critical hit! '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            else: game.gamelog.new_line(str(AttackRoll) + ' to hit: Hits for '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            self.target.Hp -= DamageRoll
+        else: 
+            game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
+        if self.cost == 'action': 
+            self.token.attacks_during_action += 1
+            if self.token.attacks_during_action >= self.token.max_attacks:
+                self.token.use_action()
+        elif self.cost == 'bonus action': 
+            if self.token.attacks_during_bonus_action > 0:
+                self.token.use_bonus_action()
+                self.token.ki_points -= 1
+            else:
+                self.token.attacks_during_bonus_action += 1
+        elif self.cost == 'reaction': self.token.use_reaction() 
+
+class HandsofHealing(Action):
+    def __init__(self):
+        name = 'Hands of Healing'
+        super().__init__(name)
+
+    def create(self, token, cost):
+        del self
+        new_instance = HandsofHealing()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
+    def is_available(self, token, cost):
+        if token.has_used_Hands_of_Healing:
+            return False
+        if cost == 'action':
+            return token.has_action() and token.ki_points>0
+        elif cost == 'bonus action':
+            return token.has_bonus_action() and token.attacks_during_action > 0 and token.ki_points>0 and token.attacks_during_bonus_action < 2
+        elif cost == 'reaction':
+            return token.has_reaction() and token.ki_points>0
+        elif cost == None:
+            return True
+
+    def do(self, game):
+        heal_roll = self.token.MonkDie.roll()+self.token.wis_bonus
+        self.token.Hp += heal_roll
+        if self.token.Hp>self.token.MaxHp:
+            self.token.Hp=self.token.MaxHp
+        self.token.ki_points -= 1
+        self.token.has_used_Hands_of_Healing = True
+        game.gamelog.new_line(self.token.name + ' heals itself by ' + str(heal_roll) + ' hit points with ' + self.name)
+        if self.cost == 'action': 
+            self.token.use_action()
+        elif self.cost == 'bonus action': 
+            if self.token.attacks_during_bonus_action > 0:
+                self.token.use_bonus_action()
+                self.token.ki_points -= 1
+            else:
+                self.token.attacks_during_bonus_action += 1
+        elif self.cost == 'reaction': self.token.use_reaction()  
+
+class HandsofHarm(MonkWeaponAttack):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Hands of Harm'
+
+    def create(self, token, cost):
+        del self
+        new_instance = HandsofHarm()
+        new_instance.token = token
+        new_instance.range = new_instance.token.weapon.range
+        new_instance.proficient = bool(token.weapon.name in token.proficiencies)
+        new_instance.cost = cost
+        return new_instance
+
+    def is_available(self, token, cost):
+        if token.has_used_Hands_of_Harm:
+            return False
+        if cost == 'action':
+            return token.has_action() and token.attacks_during_action<token.max_attacks and token.ki_points>=1
+        elif cost == 'bonus action':
+            if token.attacks_during_bonus_action > 0:
+                return token.has_bonus_action() and token.attacks_during_action > 0 and token.ki_points>=2
+            else:
+                return token.attacks_during_action > 0
+        elif cost == 'reaction':
+            return token.has_reaction() and token.ki_points>=1
+        elif cost == None:
+            return True
+
+    def do(self, game):
+        if self.target.is_triangulated[0]: 
+            AtkMod = self.target.is_triangulated[1]
+            DmgMod = self.target.is_triangulated[2]
+        else: 
+            AtkMod = 0
+            DmgMod = 0
+        AttackRoll = self.attack(modifier= AtkMod)
+        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name + ' with its fists')
+        if AttackRoll >= self.target.ArmorClass:
+            DamageRoll = self.damage(modifier= DmgMod)
+            NecroRoll = self.damage(modifier= DmgMod) - self.token.dex_bonus + self.token.wis_bonus
+            if self.is_critical: 
+                NecroRoll += self.token.MonkDie.roll()
+                if self.target.is_triangulated[0]: DamageRoll += D6.roll_dice(2)
+                game.gamelog.new_line(str(AttackRoll) + ' to hit: Critical hit! '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage and ' + str(NecroRoll) + ' necrotic damage' )
+            else: game.gamelog.new_line(str(AttackRoll) + ' to hit: Hits for '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage and ' + str(NecroRoll) + ' necrotic damage')
+            self.target.Hp -= (DamageRoll+NecroRoll)
+        else: 
+            game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
+        self.token.ki_points -= 1
+        self.token.has_used_Hands_of_Harm = True
+        if self.cost == 'action': 
+            self.token.attacks_during_action += 1
+            if self.token.attacks_during_action >= self.token.max_attacks:
+                self.token.use_action()
+        elif self.cost == 'bonus action': 
+            if self.token.attacks_during_bonus_action > 0:
+                self.token.use_bonus_action()
+                self.token.ki_points -= 1
+            else:
+                self.token.attacks_during_bonus_action += 1
+        elif self.cost == 'reaction': self.token.use_reaction() 
+
+
 #Spells 
 class Spell(Action):
     def __init__(self, name):
@@ -802,4 +969,7 @@ ActionDatabase = {  'Pass': Pass(),
                     'Triangulate Target': TriangulateTarget(),
                     'Magic Missiles': MagicMissiles(),
                     'Misty Step': MistyStep(),
-                    'Propulsion Blast': PropulsionBlast()}
+                    'Propulsion Blast': PropulsionBlast(),
+                    'Monk Weapon Attack': MonkWeaponAttack(),
+                    'Hands of Healing': HandsofHealing(),
+                    'Hands of Harm': HandsofHarm()}

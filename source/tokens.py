@@ -177,6 +177,10 @@ class stones(Object):
     def __init__(self):
         super().__init__('stones')
 
+class corpse(Object):
+    def __init__(self):
+        super().__init__('corpse')
+
 class tombstone(Object):
     def __init__(self, name):
         super().__init__('tombstone')

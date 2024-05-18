@@ -165,8 +165,9 @@ class Diagnostic(Button):
 
 
     def on_click(self, game):
-        print('nothing to see here...')
-        pass
+        print(game.active_player.ki_points)
+        # print('nothing to see here...')
+        # pass
         # if game.AIDelay != 0:
         #     game.AIDelay = 0
         # else:

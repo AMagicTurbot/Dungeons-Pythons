@@ -20,7 +20,7 @@ class Main:
         screen = self.screen
         pygame.display.set_caption('Dungeons&Pythons')
 
-        self.level = 1
+        self.level = INIT_LV
         self.enemies_win = 0
         self.players_win = 0
         self.AI = BugbearAIAgent()
@@ -83,12 +83,13 @@ class Main:
             game.get_available_actions()
             self.update_screen(screen, game, buttons)
 
-            #AI choice
-            if game.active_player.team == 'enemies':
-                state_old = self.AI.get_state(game)
-                final_move = self.AI.get_move(state_old)
-                moveset, valid = self.AI.get_moveset(final_move, game)
-                game.take_action(moveset, valid)
+            # #AI choice
+            # if game.active_player.team == 'enemies':
+            #     state_old = self.AI.get_state(game)
+            #     final_move = self.AI.get_move(state_old)
+            #     moveset, valid = self.AI.get_moveset(final_move, game)
+            #     game.take_action(moveset, valid)
+            #     self.update_screen(screen, game, buttons)
 
             if dragger.dragging:
                 dragger.update_blit(screen)

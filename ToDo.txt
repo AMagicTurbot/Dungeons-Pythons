@@ -8,6 +8,6 @@ IA self play:
 -DONE: Rework game.take_action to consider movesets and give negative reward for illegal choice
 
 
-Finire scheda Erundor
+DONE: Finire scheda Erundor
 Fare Aegis
 

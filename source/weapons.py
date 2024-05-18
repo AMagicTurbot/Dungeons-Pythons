@@ -18,7 +18,10 @@ class Weapon:
         else:
             return self.name == other.name
         
-
+Unarmed = Weapon('Shortsword', 
+                    'Simple', 5//UNITLENGHT, 
+                    D1, 'bludgeoning', 
+                    ['light'])
 
 Shortsword = Weapon('Shortsword', 
                     'Martial', 5//UNITLENGHT, 
@@ -29,7 +32,6 @@ Shortbow = Weapon('Shortbow',
                     'Simple', 30//UNITLENGHT, 
                     D6, 'piercing', 
                     ['ammunition'])
-
 
 Crossbow = Weapon('Crossbow', 
                     'Martial', 20//UNITLENGHT, 
