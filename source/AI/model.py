@@ -25,6 +25,26 @@ class Linear_QNet(nn.Module):
         file_name = os.path.join(model_folder_path, file_name)
         torch.save(self.state_dict(), file_name)
 
+class BiLinear_QNet(nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super().__init__()
+        self.lineari2h = nn.Linear(input_size, hidden_size)
+        self.linearh2h = nn.Linear(hidden_size, hidden_size)
+        self.linearh2o = nn.Linear(hidden_size, output_size)
+
+    def forward(self, x):
+        x = F.relu(self.lineari2h(x))
+        x = F.relu(self.linearh2h(x))
+        x = self.linearh2o(x)
+        return x
+
+    def save(self, file_name='model.pth'):
+        model_folder_path = AIPATH
+        if not os.path.exists(model_folder_path):
+            os.makedirs(model_folder_path)
+
+        file_name = os.path.join(model_folder_path, file_name)
+        torch.save(self.state_dict(), file_name)
 
 class QTrainer:
     def __init__(self, model, lr, gamma):

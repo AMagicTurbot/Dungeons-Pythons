@@ -44,7 +44,7 @@ class Main():
 
     def start_game(self):
         global game, field, dragger, gamelog, buttons, screen
-        self.game = Game(level=0)
+        self.game = Game(level=3)
         game = self.game
         field = game.field
         dragger = game.dragger
@@ -72,8 +72,8 @@ class Main():
         total_score = 0
         record = 0
         wins = 0
-        agent = BugbearAIAgent()
-        player_agent = RandomAgent()
+        agent = AegisAIAgent()
+        player_agent = AegisRandomAgent()
 
         while True:
             self.update_screen(screen, game, buttons)
@@ -83,7 +83,8 @@ class Main():
                 state_old = player_agent.get_state(game)
                 final_move = player_agent.get_move(state_old)
                 moveset, valid = player_agent.get_moveset(final_move, game)
-                reward, game_ended, score = game.take_action(moveset, valid)
+                try:reward, game_ended, score = game.take_action(moveset, valid, player_agent)
+                except ValueError: self.start_game()
 
             #AI to be trained
             if game.active_player.team == 'enemies':
@@ -95,7 +96,8 @@ class Main():
 
                 #Choose and perform an action
                 moveset, valid = agent.get_moveset(final_move, game)
-                reward, game_ended, score = game.take_action(moveset, valid)
+                try: reward, game_ended, score = game.take_action(moveset, valid, agent)
+                except ValueError: self.start_game()
                 state_new = agent.get_state(game)
 
                 reward_log.append(reward)
@@ -127,12 +129,13 @@ class Main():
                 #Plot results
                 print('Game', agent.n_games, 'Score', score, 'Win%:', np.round(wins/agent.n_games*100))
                 print(reward_log)
-                plot_scores.append(score)
-                plot_reward.append(np.mean(reward_log))
-                total_score += score
-                mean_score = total_score / agent.n_games
-                plot_mean_scores.append(mean_score)
-                Main.plot(plot_scores, plot_mean_scores, plot_reward)
+                if agent.n_games%1==0:
+                    plot_scores.append(score)
+                    plot_reward.append(np.mean(reward_log))
+                    total_score += score
+                    mean_score = total_score / agent.n_games
+                    plot_mean_scores.append(mean_score)
+                    Main.plot(plot_scores, plot_mean_scores, plot_reward)
 
                 reward_log = []
                 self.start_game()

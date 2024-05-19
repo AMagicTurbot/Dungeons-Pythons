@@ -43,7 +43,7 @@ class Init_LV2:
     def __init__(self):
         initialize_positions()
         self.players = [
-            [Erundor(), row1, col1]      #Token and starting position in row, col
+            [Erundor(), row1, col1]      
             ] 
         self.enemies = [
             [Bugbear(name='Bugbear A'), row2, col2],
@@ -59,7 +59,8 @@ class Init_LV3:
     def __init__(self):
         initialize_positions()
         self.players = [
-            [Erundor(), row1, col1]      #Token and starting position in row, col
+            # [Aegis(name='Aegis'), row1, col1] 
+            [Erundor(), row1, col1]    
             ] 
         self.enemies = [
             [Aegis(name='Aegis AI'), row2, col2], 

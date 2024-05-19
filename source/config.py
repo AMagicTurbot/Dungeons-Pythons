@@ -31,7 +31,7 @@ MEMORYDIAG = False
 PRINTDICE = True
 LOAD_AI = True
 AIPATH = './source/AI'
-AIDELAY = 1
-INIT_LV = 3
+AIDELAY = 1.5
+INIT_LV = 1
 
 

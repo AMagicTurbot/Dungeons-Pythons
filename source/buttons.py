@@ -146,7 +146,9 @@ class Reset(Button):
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
 
     def on_click(self, game):
-        print('Resetting game...')
+        print('nothing to see here...')
+        pass
+        # print('Resetting game...')
     
 class Diagnostic(Button):
     def __init__(self, position):
@@ -165,9 +167,8 @@ class Diagnostic(Button):
 
 
     def on_click(self, game):
-        print(game.active_player.ki_points)
-        # print('nothing to see here...')
-        # pass
+        print('nothing to see here...')
+        pass
         # if game.AIDelay != 0:
         #     game.AIDelay = 0
         # else:

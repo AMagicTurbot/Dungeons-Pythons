@@ -6,6 +6,7 @@ import time
 from AI.agent import *
 from config import *
 from tokens import *
+from PresetCharacters.characters import *
 from game import Game
 from square import Square
 from move import Move
@@ -23,7 +24,8 @@ class Main:
         self.level = INIT_LV
         self.enemies_win = 0
         self.players_win = 0
-        self.AI = BugbearAIAgent()
+        self.BugbearAI = BugbearAIAgent()
+        self.AegisAI = AegisRandomAgent()
 
     def plot(scores, mean_scores):
         display.clear_output(wait=True)
@@ -83,13 +85,20 @@ class Main:
             game.get_available_actions()
             self.update_screen(screen, game, buttons)
 
-            # #AI choice
-            # if game.active_player.team == 'enemies':
-            #     state_old = self.AI.get_state(game)
-            #     final_move = self.AI.get_move(state_old)
-            #     moveset, valid = self.AI.get_moveset(final_move, game)
-            #     game.take_action(moveset, valid)
-            #     self.update_screen(screen, game, buttons)
+            #AI choice
+            if game.active_player.team == 'enemies':
+                if isinstance(game.active_player, Bugbear):
+                    AIAgent = self.BugbearAI
+                elif isinstance(game.active_player, Aegis):
+                    AIAgent = self.AegisAI
+                state_old = AIAgent.get_state(game)
+                if game.invalid_moveset_counter>25:
+                    final_move = [1,0,0,0,0]
+                else:
+                    final_move = AIAgent.get_move(state_old)
+                moveset, valid = AIAgent.get_moveset(final_move, game)
+                game.take_action(moveset, valid, AIAgent)
+                self.update_screen(screen, game, buttons)
 
             if dragger.dragging:
                 dragger.update_blit(screen)
@@ -152,8 +161,9 @@ class Main:
                             if button.clicked(event):
                                 #Special: Reset button
                                 if button.name == 'ResetButton':
-                                    del game, buttons
-                                    self.start_game()
+                                    pass
+                                    # del game, buttons
+                                    # self.start_game()
                                 button.on_click(game)
                                 break                     
                     
@@ -193,12 +203,19 @@ class Main:
                                                 if field.squares[row][col].has_enemy(dragger.token.team):
                                                     #Only melee weapons can make AoO
                                                     if field.squares[row][col].distance(final)>1:
-                                                        if 'Weapon Attack' in dragger.token.action_list and field.squares[row][col].token.weapon.range <= 1:
-                                                            action = ActionDatabase['Weapon Attack'].create(field.squares[row][col].token, 'reaction')
-                                                            action.set_target(dragger.token, initial, field.squares[row][col])
-                                                            if action.is_available(field.squares[row][col].token, 'reaction'): 
-                                                                game.gamelog.new_line('Opportunity Attack!')
-                                                                action.do(game)
+                                                        if field.squares[row][col].token.weapon.range <= 1:
+                                                            if 'Weapon Attack' in dragger.token.action_list:
+                                                                action = ActionDatabase['Weapon Attack'].create(field.squares[row][col].token, 'reaction')
+                                                                action.set_target(dragger.token, initial, field.squares[row][col])
+                                                                if action.is_available(field.squares[row][col].token, 'reaction'): 
+                                                                    game.gamelog.new_line('Opportunity Attack!')
+                                                                    action.do(game)
+                                                            elif 'Monk Weapon Attack' in dragger.token.action_list:
+                                                                action = ActionDatabase['Monk Weapon Attack'].create(field.squares[row][col].token, 'reaction')
+                                                                action.set_target(dragger.token, initial, field.squares[row][col])
+                                                                if action.is_available(field.squares[row][col].token, 'reaction'): 
+                                                                    game.gamelog.new_line('Opportunity Attack!')
+                                                                    action.do(game)
                                 self.update_screen(screen, game, buttons)
                         dragger.release_token()
 

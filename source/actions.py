@@ -156,9 +156,9 @@ class Disengage(Action):
 class MonkDash(Dash):
     def is_available(self, token, cost):
         if cost == 'action':
-            return token.has_action()
+            return token.has_action() and token.attacks_during_action<1
         elif cost == 'bonus action':
-            return token.has_bonus_action() and token.ki_points>0
+            return token.has_bonus_action() and token.ki_points>0 and token.attacks_during_bonus_action<1
         elif cost == 'reaction':
             return token.has_reaction()
         elif cost == None:
@@ -185,9 +185,9 @@ class MonkDash(Dash):
 class MonkDodge(Dodge):
     def is_available(self, token, cost):
         if cost == 'action':
-            return token.has_action()
+            return token.has_action() and token.attacks_during_action<1
         elif cost == 'bonus action':
-            return token.has_bonus_action() and token.ki_points>0
+            return token.has_bonus_action() and token.ki_points>0 and token.attacks_during_bonus_action<1
         elif cost == 'reaction':
             return token.has_reaction()
         elif cost == None:
@@ -214,9 +214,9 @@ class MonkDodge(Dodge):
 class MonkDisengage(Disengage):
     def is_available(self, token, cost):
         if cost == 'action':
-            return token.has_action()
+            return token.has_action() and token.attacks_during_action<1
         elif cost == 'bonus action':
-            return token.has_bonus_action() and token.ki_points>0
+            return token.has_bonus_action() and token.ki_points>0 and token.attacks_during_bonus_action<1
         elif cost == 'reaction':
             return token.has_reaction()
         elif cost == None:
@@ -660,7 +660,7 @@ class HandsofHarm(MonkWeaponAttack):
             if token.attacks_during_bonus_action > 0:
                 return token.has_bonus_action() and token.attacks_during_action > 0 and token.ki_points>=2
             else:
-                return token.attacks_during_action > 0
+                return token.has_bonus_action() and token.attacks_during_action > 0
         elif cost == 'reaction':
             return token.has_reaction() and token.ki_points>=1
         elif cost == None:
@@ -676,6 +676,8 @@ class HandsofHarm(MonkWeaponAttack):
         AttackRoll = self.attack(modifier= AtkMod)
         game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name + ' with its fists')
         if AttackRoll >= self.target.ArmorClass:
+            self.token.ki_points -= 1
+            self.token.has_used_Hands_of_Harm = True
             DamageRoll = self.damage(modifier= DmgMod)
             NecroRoll = self.damage(modifier= DmgMod) - self.token.dex_bonus + self.token.wis_bonus
             if self.is_critical: 
@@ -686,8 +688,6 @@ class HandsofHarm(MonkWeaponAttack):
             self.target.Hp -= (DamageRoll+NecroRoll)
         else: 
             game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
-        self.token.ki_points -= 1
-        self.token.has_used_Hands_of_Harm = True
         if self.cost == 'action': 
             self.token.attacks_during_action += 1
             if self.token.attacks_during_action >= self.token.max_attacks:

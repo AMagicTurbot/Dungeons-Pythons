@@ -28,14 +28,18 @@ class Game:
         self.game_ended = False
         self.AIDelay = AIDELAY
         self.PreviousTurnHP = self.active_player.Hp
+        self.invalid_moveset_counter = 0
 
     #Gamestate methods
-    def take_action(self, moveset, valid):
+    def take_action(self, moveset, valid, agent):
         reward = 0
         score = 0
-
         if not valid: #reward -10 if moveset is invalid
-            return -10, self.game_ended, score
+            # print('INVALID MOVESET!')
+            self.invalid_moveset_counter += 1
+            return -30, self.game_ended, score
+        else:
+            self.invalid_moveset_counter = 0 
 
         for action in moveset:
             if action.requires_target():
@@ -49,30 +53,21 @@ class Game:
                         if square.has_enemy(self.active_player.team):
                             enemy_square = square
 
-            action.do(self)
+            agent.ConditionalMoveset(action).do(self)
 
-            #Rewards   
-            if isinstance(action, Attack) or isinstance(action, MagicMissiles): # +6 for attacking, to be removed
-                reward += 6
-            if action.requires_target(): 
-                if action.target.Hp < saved_target_hp and action.target.team!=self.active_player.team: # +9 for hitting
-                    reward+= 9
-                if action.target.Hp <= 0: # +10 for killing
-                    reward+= 15
-        if self.active_player.weapon.name == 'Morning Star':
-            reward += 3
-            # if isinstance(action, Movement) and self.active_player.weapon.range<2: # +3 for getting closer
-            #     for row in self.field.squares:
-            #         for square in row:
-            #             if square.token == self.active_player:
-            #                 player_square = square
-            #     if player_square.distance(enemy_square) < initial_player_square.distance(enemy_square) and initial_player_square.distance(enemy_square)>self.active_player.weapon.range:
-            #         reward += 5
+            # #Rewards   
+            # if isinstance(action, Attack): # +6 for attacking
+            #     reward += 6
+            # if action.requires_target(): 
+            #     if action.target.Hp < saved_target_hp and action.target.team!=self.active_player.team: # +9 for hitting
+            #         reward+= 5+(saved_target_hp-action.target.Hp)
+            #     if action.target.Hp <= 0: # +18 for killing
+            #         reward+= 18
+            # if self.active_player.Hp<agent.past_Hp:
+            #     reward-= (5+agent.past_Hp-self.active_player.Hp)
+            # agent.past_Hp=self.active_player.Hp
 
         time.sleep(self.AIDelay)
-        if reward == 0 or reward == 3:
-            reward = -10
-        # reward -= self.turns//2
         
         #End game
         if len(self.initiative_order)==1:

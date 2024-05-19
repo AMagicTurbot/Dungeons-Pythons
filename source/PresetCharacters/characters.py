@@ -135,7 +135,8 @@ class Aegis(Creature):
         self.has_used_Hands_of_Harm = False
         self.has_used_Hands_of_Healing = False
         self.action_list = ['Monk Weapon Attack', 
-                            'Hands of Harm',        
+                            'Hands of Harm',     
+                            'Hands of Healing',   
                             'Monk Dodge',
                             'Monk Dash',
                             'Monk Disengage'                            
