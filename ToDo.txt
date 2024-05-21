@@ -7,7 +7,3 @@ IA self play:
 -DONE: Minor expansion to agent.get_state
 -DONE: Rework game.take_action to consider movesets and give negative reward for illegal choice
 
-
-Aegis dash/dodge/dis to use ki on bonus action
-Aegis moveset and training rewards
-
