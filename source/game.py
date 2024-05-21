@@ -3,25 +3,86 @@ import pygame
 from config import *
 from dice import *
 from tokens import Creature, Target
-from init import Init
 from field import Field
 from dragger import Dragger
 from gamelog import Gamelog
-from actions import ActionDatabase
-from buttons import Actionbutton
+from actions import *
+from buttons import Buttons, Actionbutton
 
 
 class Game:
 
-    def __init__(self):
-        self.field = Field()
+    def __init__(self, level):
+        self.level = level
+        self.field = Field(self.level)
         self.dragger = Dragger()
         self.gamelog = Gamelog()
+        self.buttons = Buttons()
 
         self.initiative_order = []
         self.active_player = self.field.playable_tokens[0]
         self.show_actions = None
+        self.turns = 0
 
+        #AI variables
+        self.game_ended = False
+        self.AIDelay = AIDELAY
+        self.PreviousTurnHP = self.active_player.Hp
+        self.invalid_moveset_counter = 0
+
+    #Gamestate methods
+    def take_action(self, moveset, valid, agent):
+        reward = 0
+        score = 0
+        if not valid: #reward -10 if moveset is invalid
+            # print('INVALID MOVESET!')
+            self.invalid_moveset_counter += 1
+            return -30, self.game_ended, score
+        else:
+            self.invalid_moveset_counter = 0 
+
+        for action in moveset:
+            if action.requires_target():
+                saved_target_hp = action.target.Hp
+
+            if isinstance(action, Movement):
+                for row in self.field.squares:
+                    for square in row:
+                        if square.token == self.active_player:
+                            initial_player_square = square
+                        if square.has_enemy(self.active_player.team):
+                            enemy_square = square
+
+            agent.ConditionalMoveset(action).do(self)
+
+            # #Rewards   
+            # if isinstance(action, Attack): # +6 for attacking
+            #     reward += 6
+            # if action.requires_target(): 
+            #     if action.target.Hp < saved_target_hp and action.target.team!=self.active_player.team: # +9 for hitting
+            #         reward+= 5+(saved_target_hp-action.target.Hp)
+            #     if action.target.Hp <= 0: # +18 for killing
+            #         reward+= 18
+            # if self.active_player.Hp<agent.past_Hp:
+            #     reward-= (5+agent.past_Hp-self.active_player.Hp)
+            # agent.past_Hp=self.active_player.Hp
+
+        time.sleep(self.AIDelay)
+        
+        #End game
+        if len(self.initiative_order)==1:
+            if self.initiative_order[0].team  == 'enemies':
+                print('Enemies win!')
+                score = 100-self.turns
+            elif self.initiative_order[0].team == 'players':
+                print('Players win!')
+                score = 0
+            self.game_ended = True
+
+        # print('AI reward: ' + str(reward))
+        return reward, self.game_ended, score
+
+    #Blit methods
     def show_all(self, surface):
         self.show_field(surface)
         self.show_interface(surface)
@@ -61,7 +122,6 @@ class Game:
                             pygame.draw.rect(surface, LOGBKGNDCOLOR, EmpyRect)
                             pygame.draw.rect(surface, ONColor, HPRect)
                         
-
     def show_moves(self, surface):
         if self.dragger.dragging and self.dragger.token.can_move:
             token = self.dragger.token
@@ -81,11 +141,12 @@ class Game:
                 TargetImg = Target()
                 img = pygame.image.load(TargetImg.texture)
                 img_center = ((square.col+0.5)*SQSIZE, (square.row+0.5)*SQSIZE)
-                surface.blit(img, img.get_rect(center=img_center))
-                
-                
+                surface.blit(img, img.get_rect(center=img_center))            
 
     def show_interface(self, surface):
+        #Current level
+        CurrentLevelText = self.gamelog.font.render('Currently on Level ' + str(self.level), True, self.gamelog.textcolor)
+        surface.blit(CurrentLevelText, (self.gamelog.x, self.gamelog.y*0.95))
         #Active player
         ActivePlayerColor = PlayersCOLOR if self.active_player.team == 'players' else EnemiesCOLOR
         ActivePlayerText = self.gamelog.font.render('Current player: ' + str(self.active_player), True, ActivePlayerColor)
@@ -93,11 +154,9 @@ class Game:
         #Movement
         MovementText = self.gamelog.font.render('Movement: ' + str(self.active_player.current_movement*UNITLENGHT) + ' ' + LENGHTNAME, True, self.gamelog.textcolor)
         surface.blit(MovementText, (self.gamelog.x, 30))
-        #Action
-        
+        #Actions
         AColor = ONColor if self.active_player.has_action() else OFFColor
         AText = self.gamelog.font.render('Action', True, (50, 50, 50))
-        
         surface.blit(AText, (WIDTH+LOGWIDTH//8+(LOGWIDTH//3-AText.get_width())/2, 60))
         #Bonus Actions
         ARect = pygame.Rect((WIDTH + LOGWIDTH*7//12, 50), (LOGWIDTH//3, 30))
@@ -145,12 +204,12 @@ class Game:
         self.active_player=self.initiative_order[0]
         self.active_player.turn_start()
 
-    def print_initiative(self):
+        #Gamelog initiative
         initiative = 'Initiative: '
         for token in self.initiative_order:
             initiative += str(token) + ' ,'
-        return initiative
-        
+        self.gamelog.new_line(initiative)
+           
     def get_available_actions(self):
         #Consider token Actions list
         self.active_player.ActiveTurnActions = []
@@ -160,7 +219,8 @@ class Game:
                 action = possible_action.create(self.active_player,'action')        #Create action by binding token and cost   
                 if action.requires_target(): 
                     action.get_available_targets(self.active_player, self.field)   
-                    if len(action.available_targets)>0: self.active_player.ActiveTurnActions.append(action)                        
+                    if len(action.available_targets)>0: 
+                        self.active_player.ActiveTurnActions.append(action)                        
                 else: self.active_player.ActiveTurnActions.append(action)
         #Consider token Bonus Actions
         self.active_player.ActiveTurnBonusActions = []
@@ -171,7 +231,8 @@ class Game:
                 if action.requires_target(): 
                     action.get_available_targets(self.active_player, self.field)   
                     if len(action.available_targets)>0: self.active_player.ActiveTurnBonusActions.append(action)                        
-                else: self.active_player.ActiveTurnBonusActions.append(action)                                   
+                else: self.active_player.ActiveTurnBonusActions.append(action)    
+        self.active_player.ActiveTurnActions.append(Pass().create(self.active_player,None))          
 
 
     def next_turn(self):
@@ -185,6 +246,7 @@ class Game:
             self.active_player = self.initiative_order[index+1]
         else:
             self.active_player = self.initiative_order[0]
+            self.turns += 1
         #Reset token turn variables
         self.active_player.turn_start()
         #Start-Turn events 

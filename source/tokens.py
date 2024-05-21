@@ -127,8 +127,7 @@ class Antonio(Creature):
         self.ArmorClass = 15
 
         #Actions
-        self.action_list = ['Pass',
-                            'Dash',
+        self.action_list = ['Dash',
                             'Dodge',
                             'Disengage',
                             'Weapon Attack']
@@ -140,26 +139,32 @@ class Kenku(Creature):
         spritename='Kenku'
         super().__init__(spritename, team)
         self.name=name
-        self.speed = 10 // UNITLENGHT
+        self.speed = 20 // UNITLENGHT
         self.proficiency = 3
         #Characteristics
         self.str = 14
         self.str_bonus = Creature._bonus(self.str)
-        self.dex = 16
+        self.dex = 18
         self.dex_bonus = Creature._bonus(self.dex)
+        self.int = 14
+        self.int_bonus = Creature._bonus(self.dex)
         #Status
-        self.MaxHp = 5
+        self.MaxHp = 32
         self.Hp = self.MaxHp
         #Equipment
         self.proficiencies = ['Shortbow', 'Shortsword']
         self.weapon = Shortbow
         self.ArmorClass = 13
         #Actions
-        self.action_list = ['Pass',
-                            'Dash',
+        self.action_list = ['Dash',
                             'Dodge',
                             'Disengage',
                             'Weapon Attack']
+
+        #Spellcasting
+        self.spellslots = [99, 4]
+        self.spellcasting_bonus = self.int_bonus
+        self.spell_DC = 8 + self.spellcasting_bonus + self.proficiency
 
 
 
@@ -171,6 +176,10 @@ class Object(Token):
 class stones(Object):
     def __init__(self):
         super().__init__('stones')
+
+class corpse(Object):
+    def __init__(self):
+        super().__init__('corpse')
 
 class tombstone(Object):
     def __init__(self, name):

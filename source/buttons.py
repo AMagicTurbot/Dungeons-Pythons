@@ -1,6 +1,7 @@
 from config import * 
 import pygame
 import sys
+import time
 from gamelog import Gamelog
 
 class Buttons:
@@ -145,14 +146,16 @@ class Reset(Button):
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
 
     def on_click(self, game):
-        print('Resetting game...')
+        print('nothing to see here...')
+        pass
+        # print('Resetting game...')
     
 class Diagnostic(Button):
     def __init__(self, position):
         super().__init__('DiagnosticButton')
         self.fontsize = 20
         self.font = pygame.font.SysFont(LOGFONT, self.fontsize)
-        self.content = 'Current Hp'
+        self.content = 'Empty'
         self.width = 0.65*self.fontsize*len(self.content)
         self.height = self.fontsize*1.3
         self.x = position[0]
@@ -162,8 +165,14 @@ class Diagnostic(Button):
         self.text = self.font.render(self.content, True, self.textcolor)
         self.rect = pygame.Rect((self.x, self.y), (self.width, self.height))
 
+
     def on_click(self, game):
-        print(str(game.active_player.Hp) + ' / ' + str(game.active_player.MaxHp))
+        print('nothing to see here...')
         pass
+        # if game.AIDelay != 0:
+        #     game.AIDelay = 0
+        # else:
+        #     game.AIDelay = AIDELAY
+        
 
         

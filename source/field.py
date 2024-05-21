@@ -8,11 +8,19 @@ from move import Move
 
 class Field:
 
-    def __init__(self):
+    def __init__(self, level):
         self.squares = list([0 for col in range(COLS)] for row in range(ROWS))
         self._create()
         self.playable_tokens = []
-        self._init_tokens()
+        if level == 0:
+            init_config = Init_AI()
+        if level == 1:
+            init_config = Init_LV1()
+        elif level == 2:
+            init_config = Init_LV2()
+        elif level == 3:
+            init_config = Init_LV3()
+        self._init_tokens(init_config)
     
 
     def movement_distance(self, token, move, calculating=False):
@@ -38,7 +46,7 @@ class Field:
             distance = move.lenght()
         return distance
     
-    def move(self, token, move):
+    def move(self, token, move, game):
         initial = move.initial
         final = move.final
         #Update squares list with new token position
@@ -48,6 +56,22 @@ class Field:
         movedistance = self.movement_distance(token, move)
         token.current_movement -= movedistance
         token.clear_moves()
+
+        #Check for opportunity attacks
+        if not token.freemoving:
+            for row in [initial.row-1, initial.row, initial.row+1]:
+                for col in [initial.col-1, initial.col, initial.col+1]:
+                    if Square.on_field(row, col):
+                        if self.squares[row][col].has_enemy(token.team) and self.squares[row][col].distance(final)>1:
+                            enemy_token = self.squares[row][col].token
+                            #Only melee weapons can make AoO
+                            if 'Weapon Attack' in enemy_token.action_list and enemy_token.weapon.range <= 1: 
+                                action = ActionDatabase['Weapon Attack'].create(enemy_token, 'reaction')
+                                action.set_target(token, initial, self.squares[row][col])
+                                if action.is_available(enemy_token, 'reaction'): 
+                                    game.gamelog.new_line('Opportunity Attack!')
+                                    action.do(game)        
+
         return movedistance
 
     def valid_move(self, token, move):
@@ -84,8 +108,8 @@ class Field:
             for col in range(COLS):
                 self.squares[row][col] = Square(row, col)
 
-    def _init_tokens(self):
-        init = Init()
+    def _init_tokens(self, init_config):
+        init = init_config
         for token in init.players:
             self.playable_tokens.append(token[0])
             self.squares[token[1]][token[2]] = Square(token[1],token[2], token[0])

@@ -153,6 +153,114 @@ class Disengage(Action):
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
 
+class MonkDash(Dash):
+    def is_available(self, token, cost):
+        if cost == 'action':
+            return token.has_action() and token.attacks_during_action<1
+        elif cost == 'bonus action':
+            return token.has_bonus_action() and token.ki_points>0 and token.attacks_during_bonus_action<1
+        elif cost == 'reaction':
+            return token.has_reaction()
+        elif cost == None:
+            return True
+    
+    def create(self, token, cost):
+        del self
+        new_instance = MonkDash()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
+    def do(self, game):
+        #Instructions
+        self.token.current_movement += self.token.speed
+        #Log
+        game.gamelog.new_line(self.token.name + ' dashes.')
+        #Cost
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': 
+            self.token.use_bonus_action()
+            self.token.ki_points -= 1
+
+class MonkDodge(Dodge):
+    def is_available(self, token, cost):
+        if cost == 'action':
+            return token.has_action() and token.attacks_during_action<1
+        elif cost == 'bonus action':
+            return token.has_bonus_action() and token.ki_points>0 and token.attacks_during_bonus_action<1
+        elif cost == 'reaction':
+            return token.has_reaction()
+        elif cost == None:
+            return True
+
+    def create(self, token, cost):
+        del self
+        new_instance = MonkDodge()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+    
+    def do(self, game):
+        #Instructions
+        self.token.is_dodging = True
+        #Log
+        game.gamelog.new_line(self.token.name + ' dodges.')
+        #Cost
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': 
+            self.token.use_bonus_action()
+            self.token.ki_points -= 1
+
+class MonkDisengage(Disengage):
+    def is_available(self, token, cost):
+        if cost == 'action':
+            return token.has_action() and token.attacks_during_action<1
+        elif cost == 'bonus action':
+            return token.has_bonus_action() and token.ki_points>0 and token.attacks_during_bonus_action<1
+        elif cost == 'reaction':
+            return token.has_reaction()
+        elif cost == None:
+            return True
+
+    def create(self, token, cost):
+        del self
+        new_instance = MonkDisengage()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
+    def do(self, game):
+        #Instructions
+        self.token.freemoving = True
+        self.token.EndTurnActions.append(EndDisengage(self.token))
+        #Log
+        game.gamelog.new_line(self.token.name + ' disengages.')
+        #Cost
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': 
+            self.token.use_bonus_action()
+            self.token.ki_points -= 1
+
+class Movement(Action):
+    def __init__(self, initial, direction):
+        self.direction = direction
+        self.initial_square = initial
+        name = 'Move ' + str(direction[0]) + ' ,' + str(direction[1])
+        super().__init__(name)
+
+    def do(self, game):
+        row = self.initial_square.row
+        col = self.initial_square.col
+        final_row = row+self.direction[0]
+        final_col = col+self.direction[1]
+        game.field.get_moves(game.active_player, row, col)
+        for move in game.active_player.moves:
+            if move.final.row == final_row and move.final.col == final_col:
+                movedistance = game.field.move(game.active_player, move, game)
+                game.gamelog.new_line(game.active_player.name + ' moves by ' + str(int((movedistance)*UNITLENGHT)) + ' ' + LENGHTNAME)
+
+
+
 #Attack Actions
 #Attacks require a TARGET, which is found by scanning squares within a certain RANGE for enemy tokens
 class Attack(Action):
@@ -259,7 +367,7 @@ class WeaponAttack(Attack):
             AtkMod = 0
             DmgMod = 0
         AttackRoll = self.attack(modifier= AtkMod)
-        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name)
+        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name + ' with ' + str(self.token.weapon.name))
         if AttackRoll >= self.target.ArmorClass:
             DamageRoll = self.damage(modifier= DmgMod)
             if self.is_critical: 
@@ -337,12 +445,12 @@ class PropulsionBlast(Attack):
         final_square = game.field.squares[min(final_row, ROWS-1)][min(final_col, COLS-1)]
         if not final_square.is_occupied():
             moveSelf = Move(self.token_square, final_square)
-            game.field.move(self.token, moveSelf)
+            game.field.move(self.token, moveSelf, game)
         else:
-            final_square = game.field.squares[self.token_square.row-1*direction[1]][self.token_square.col-1*direction[0]]
+            final_square = game.field.squares[min(self.token_square.row-1*direction[1], ROWS-1)][min(self.token_square.col-1*direction[0], COLS-1)]
             if not final_square.is_occupied():
                 moveSelf = Move(self.token_square, final_square)
-                game.field.move(self.token, moveSelf)
+                game.field.move(self.token, moveSelf, game)
             else:
                 pass
         self.token.current_movement = movement
@@ -357,22 +465,22 @@ class PropulsionBlast(Attack):
             final_square = game.field.squares[min(final_row, ROWS-1)][min(final_col, COLS-1)]
             if not final_square.is_occupied():
                 moveTarget = Move(self.target_square, final_square)
-                game.field.move(self.target, moveTarget)
+                game.field.move(self.target, moveTarget, game)
             else:
-                final_square = game.field.squares[self.target_square.row+3*direction[1]][self.target_square.col+3*direction[0]]
+                final_square = game.field.squares[min(self.target_square.row+3*direction[1], ROWS-1)][min(self.target_square.col+3*direction[0], COLS-1)]
                 if not final_square.is_occupied():
                     moveTarget = Move(self.target_square, final_square)
-                    game.field.move(self.target, moveTarget)
+                    game.field.move(self.target, moveTarget, game)
                 else: 
-                    final_square = game.field.squares[self.target_square.row+2*direction[1]][self.target_square.col+2*direction[0]]
+                    final_square = game.field.squares[min(self.target_square.row+2*direction[1], ROWS-1)][min(self.target_square.col+2*direction[0], COLS-1)]
                     if not final_square.is_occupied():
                         moveTarget = Move(self.target_square, final_square)
-                        game.field.move(self.target, moveTarget)
+                        game.field.move(self.target, moveTarget, game)
                     else:
-                        final_square = game.field.squares[self.target_square.row+1*direction[1]][self.target_square.col+1*direction[0]]
+                        final_square = game.field.squares[min(self.target_square.row+1*direction[1], ROWS-1)][min(self.target_square.col+1*direction[0], COLS-1)]
                         if not final_square.is_occupied():
                             moveTarget = Move(self.target_square, final_square)
-                            game.field.move(self.target, moveTarget)
+                            game.field.move(self.target, moveTarget, game)
                         else:
                             pass
             self.target.current_movement = movement
@@ -383,6 +491,214 @@ class PropulsionBlast(Attack):
         if self.cost == 'action': self.token.use_action()
         elif self.cost == 'bonus action': self.token.use_bonus_action()
         elif self.cost == 'reaction': self.token.use_reaction()
+
+class BugbearWeaponAttack(WeaponAttack):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Bugbear Weapon Attack'
+
+    def damage(self, turn, modifier = 0):
+        roll = self.token.weapon.DamageDice.roll() 
+        if self.token.weapon.range <= 1:
+            roll += self.token.weapon.DamageDice.roll()
+        if turn == 0:
+            roll += D6.roll()
+        if self.is_critical: 
+            roll += self.token.weapon.DamageDice.roll()
+            if self.token.weapon.range <= 1:
+                roll += self.token.weapon.DamageDice.roll()
+            if turn == 0:
+                roll += D6.roll()
+        if self.token.weapon.range > 1  or 'finesse' in self.token.weapon.attributes:
+            roll += self.token.dex_bonus
+        else:
+            roll += self.token.str_bonus
+        roll += self.token.weapon.dmgmodifier + modifier
+        return roll 
+    
+    def do(self, game):
+        if self.target.is_triangulated[0]: 
+            AtkMod = self.target.is_triangulated[1]
+            DmgMod = self.target.is_triangulated[2]
+        else: 
+            AtkMod = 0
+            DmgMod = 0
+        AttackRoll = self.attack(modifier= AtkMod)
+        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name + ' with ' + str(self.token.weapon.name))
+        if AttackRoll >= self.target.ArmorClass:
+            DamageRoll = self.damage(turn = game.turns, modifier= DmgMod)
+            if self.is_critical: 
+                if self.target.is_triangulated[0]: DamageRoll += D6.roll_dice(2)
+                game.gamelog.new_line(str(AttackRoll) + ' to hit: Critical hit! '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            else: game.gamelog.new_line(str(AttackRoll) + ' to hit: Hits for '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            self.target.Hp -= DamageRoll
+        else: 
+            game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
+        if self.cost == 'action': self.token.use_action()
+        elif self.cost == 'bonus action': self.token.use_bonus_action()
+        elif self.cost == 'reaction': self.token.use_reaction()
+
+class MonkWeaponAttack(WeaponAttack):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Monk Weapon Attack'
+
+    def create(self, token, cost):
+        del self
+        new_instance = MonkWeaponAttack()
+        new_instance.token = token
+        new_instance.range = new_instance.token.weapon.range
+        new_instance.proficient = bool(token.weapon.name in token.proficiencies)
+        new_instance.cost = cost
+        return new_instance
+
+    def is_available(self, token, cost):
+        if cost == 'action':
+            return token.has_action() and token.attacks_during_action<token.max_attacks
+        elif cost == 'bonus action':
+            if token.attacks_during_bonus_action > 0:
+                return token.has_bonus_action() and token.attacks_during_action>0 and token.ki_points>=1
+            else:
+                return token.has_bonus_action() and token.attacks_during_action>0
+        elif cost == 'reaction':
+            return token.has_reaction()
+        elif cost == None:
+            return True
+
+    def do(self, game):
+        if self.target.is_triangulated[0]: 
+            AtkMod = self.target.is_triangulated[1]
+            DmgMod = self.target.is_triangulated[2]
+        else: 
+            AtkMod = 0
+            DmgMod = 0
+        AttackRoll = self.attack(modifier= AtkMod)
+        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name + ' with its fists')
+        if AttackRoll >= self.target.ArmorClass:
+            DamageRoll = self.damage(modifier= DmgMod)
+            if self.is_critical: 
+                if self.target.is_triangulated[0]: DamageRoll += D6.roll_dice(2)
+                game.gamelog.new_line(str(AttackRoll) + ' to hit: Critical hit! '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            else: game.gamelog.new_line(str(AttackRoll) + ' to hit: Hits for '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage')
+            self.target.Hp -= DamageRoll
+        else: 
+            game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
+        if self.cost == 'action': 
+            self.token.attacks_during_action += 1
+            if self.token.attacks_during_action >= self.token.max_attacks:
+                self.token.use_action()
+        elif self.cost == 'bonus action': 
+            if self.token.attacks_during_bonus_action > 0:
+                self.token.use_bonus_action()
+                self.token.ki_points -= 1
+            else:
+                self.token.attacks_during_bonus_action += 1
+        elif self.cost == 'reaction': self.token.use_reaction() 
+
+class HandsofHealing(Action):
+    def __init__(self):
+        name = 'Hands of Healing'
+        super().__init__(name)
+
+    def create(self, token, cost):
+        del self
+        new_instance = HandsofHealing()
+        new_instance.token = token
+        new_instance.cost = cost
+        return new_instance
+
+    def is_available(self, token, cost):
+        if token.has_used_Hands_of_Healing:
+            return False
+        if cost == 'action':
+            return token.has_action() and token.ki_points>0
+        elif cost == 'bonus action':
+            return token.has_bonus_action() and token.attacks_during_action > 0 and token.ki_points>0 and token.attacks_during_bonus_action < 2
+        elif cost == 'reaction':
+            return token.has_reaction() and token.ki_points>0
+        elif cost == None:
+            return True
+
+    def do(self, game):
+        heal_roll = self.token.MonkDie.roll()+self.token.wis_bonus
+        self.token.Hp += heal_roll
+        if self.token.Hp>self.token.MaxHp:
+            self.token.Hp=self.token.MaxHp
+        self.token.ki_points -= 1
+        self.token.has_used_Hands_of_Healing = True
+        game.gamelog.new_line(self.token.name + ' heals itself by ' + str(heal_roll) + ' hit points with ' + self.name)
+        if self.cost == 'action': 
+            self.token.use_action()
+        elif self.cost == 'bonus action': 
+            if self.token.attacks_during_bonus_action > 0:
+                self.token.use_bonus_action()
+                self.token.ki_points -= 1
+            else:
+                self.token.attacks_during_bonus_action += 1
+        elif self.cost == 'reaction': self.token.use_reaction()  
+
+class HandsofHarm(MonkWeaponAttack):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Hands of Harm'
+
+    def create(self, token, cost):
+        del self
+        new_instance = HandsofHarm()
+        new_instance.token = token
+        new_instance.range = new_instance.token.weapon.range
+        new_instance.proficient = bool(token.weapon.name in token.proficiencies)
+        new_instance.cost = cost
+        return new_instance
+
+    def is_available(self, token, cost):
+        if token.has_used_Hands_of_Harm:
+            return False
+        if cost == 'action':
+            return token.has_action() and token.attacks_during_action<token.max_attacks and token.ki_points>=1
+        elif cost == 'bonus action':
+            if token.attacks_during_bonus_action > 0:
+                return token.has_bonus_action() and token.attacks_during_action > 0 and token.ki_points>=2
+            else:
+                return token.has_bonus_action() and token.attacks_during_action > 0
+        elif cost == 'reaction':
+            return token.has_reaction() and token.ki_points>=1
+        elif cost == None:
+            return True
+
+    def do(self, game):
+        if self.target.is_triangulated[0]: 
+            AtkMod = self.target.is_triangulated[1]
+            DmgMod = self.target.is_triangulated[2]
+        else: 
+            AtkMod = 0
+            DmgMod = 0
+        AttackRoll = self.attack(modifier= AtkMod)
+        game.gamelog.new_line(self.token.name + ' attacks ' + self.target.name + ' with its fists')
+        if AttackRoll >= self.target.ArmorClass:
+            self.token.ki_points -= 1
+            self.token.has_used_Hands_of_Harm = True
+            DamageRoll = self.damage(modifier= DmgMod)
+            NecroRoll = self.damage(modifier= DmgMod) - self.token.dex_bonus + self.token.wis_bonus
+            if self.is_critical: 
+                NecroRoll += self.token.MonkDie.roll()
+                if self.target.is_triangulated[0]: DamageRoll += D6.roll_dice(2)
+                game.gamelog.new_line(str(AttackRoll) + ' to hit: Critical hit! '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage and ' + str(NecroRoll) + ' necrotic damage' )
+            else: game.gamelog.new_line(str(AttackRoll) + ' to hit: Hits for '+ str(DamageRoll) + ' ' + self.token.weapon.DamageType + ' damage and ' + str(NecroRoll) + ' necrotic damage')
+            self.target.Hp -= (DamageRoll+NecroRoll)
+        else: 
+            game.gamelog.new_line(str(AttackRoll) + ' to hit: Misses!')
+        if self.cost == 'action': 
+            self.token.attacks_during_action += 1
+            if self.token.attacks_during_action >= self.token.max_attacks:
+                self.token.use_action()
+        elif self.cost == 'bonus action': 
+            if self.token.attacks_during_bonus_action > 0:
+                self.token.use_bonus_action()
+                self.token.ki_points -= 1
+            else:
+                self.token.attacks_during_bonus_action += 1
+        elif self.cost == 'reaction': self.token.use_reaction() 
 
 
 #Spells 
@@ -523,7 +839,7 @@ class CureWounds(Spell):
             for square in rows:
                 if self.is_valid_target(initial_square, square, square.token): 
                     if initial_square.distance(square)<=self.range:
-                        self.available_targets.append(square)
+                        if square not in self.available_targets: self.available_targets.append(square)
         return self.available_targets
     
     def is_valid_target(self, initial_square, final_square, token):
@@ -660,7 +976,7 @@ class MistyStep(Spell):
     def do(self, game):
         DontUseMovement = int(self.token.current_movement)
         move = Move(self.token_square, self.target_square)
-        game.field.move(self.token, move)
+        game.field.move(self.token, move, game)
         self.token.current_movement = DontUseMovement
         game.gamelog.new_line(self.token.name + ' casts Misty Step')
         if self.cost == 'action': 
@@ -734,10 +1050,17 @@ ActionDatabase = {  'Pass': Pass(),
                     'Dash': Dash(),
                     'Dodge': Dodge(),
                     'Disengage': Disengage(),
+                    'Monk Dash': MonkDash(),
+                    'Monk Dodge': MonkDodge(),
+                    'Monk Disengage': MonkDisengage(),
                     'Weapon Attack': WeaponAttack(),
+                    'Bugbear Weapon Attack': BugbearWeaponAttack(),
                     'Firebolt': Firebolt(),
                     'Cure Wounds': CureWounds(),
                     'Triangulate Target': TriangulateTarget(),
                     'Magic Missiles': MagicMissiles(),
                     'Misty Step': MistyStep(),
-                    'Propulsion Blast': PropulsionBlast()}
+                    'Propulsion Blast': PropulsionBlast(),
+                    'Monk Weapon Attack': MonkWeaponAttack(),
+                    'Hands of Healing': HandsofHealing(),
+                    'Hands of Harm': HandsofHarm()}
