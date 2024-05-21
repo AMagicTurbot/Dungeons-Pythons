@@ -61,7 +61,6 @@ class QTrainer:
         reward = torch.tensor(reward, dtype=torch.float)
         next_state = torch.tensor(next_state, dtype=torch.float)
 
-        #Convert data x in tor (x, n) form where n is the timestep 1,2,3...
         if len(state.shape) == 1:
             state = torch.unsqueeze(state, 0)
             action = torch.unsqueeze(action, 0)
@@ -69,7 +68,6 @@ class QTrainer:
             next_state = torch.unsqueeze(next_state, 0)
             game_ended = (game_ended, )
         
-        #Get predicted Q from current state and Q_new from reward + gamma*max(Q(next_state))
         pred = self.model(state)
 
         target = pred.clone()
